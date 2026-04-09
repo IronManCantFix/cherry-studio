@@ -249,7 +249,10 @@ const togetherFetcher: ModelFetcher = {
 }
 
 const newApiFetcher: ModelFetcher = {
-  match: (p) => p.id === SystemProviderIds['new-api'] || p.type === 'new-api' || p.id === SystemProviderIds.cherryin,
+  match: (p) =>
+    p.id === SystemProviderIds['new-api'] ||
+    ['new-api', 'new-api-image'].includes(p.type) ||
+    p.id === SystemProviderIds.cherryin,
   fetch: async (provider, signal) => {
     const baseUrl = formatApiHost(provider.apiHost)
     const response = await getFromApi({
@@ -262,6 +265,25 @@ const newApiFetcher: ModelFetcher = {
       toModel(m.id, provider, {
         owned_by: m.owned_by,
         supported_endpoint_types: m.supported_endpoint_types as EndpointType[] | undefined
+      })
+    )
+  }
+}
+
+const volcengineImageFetcher: ModelFetcher = {
+  match: (p) => p.type === 'volcengine-image',
+  fetch: async (provider, signal) => {
+    const baseUrl = formatApiHost(provider.apiHost)
+    const response = await getFromApi({
+      url: `${baseUrl}/models`,
+      headers: defaultHeaders(provider),
+      responseSchema: NewApiModelsResponseSchema,
+      abortSignal: signal
+    })
+    return dedup(response.data, (m) => m.id).map((m) =>
+      toModel(m.id, provider, {
+        owned_by: m.owned_by,
+        supported_endpoint_types: ['image-generation'] as EndpointType[]
       })
     )
   }
@@ -355,6 +377,7 @@ const openAICompatibleFetcher: ModelFetcher = {
 
 const fetchers: ModelFetcher[] = [
   aiHubMixFetcher,
+  volcengineImageFetcher,
   ollamaFetcher,
   geminiFetcher,
   githubFetcher,

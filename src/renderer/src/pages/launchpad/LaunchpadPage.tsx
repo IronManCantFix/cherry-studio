@@ -3,7 +3,7 @@ import App from '@renderer/components/MinApp/MinApp'
 import { useMinapps } from '@renderer/hooks/useMinapps'
 import { useRuntime } from '@renderer/hooks/useRuntime'
 import { useSettings } from '@renderer/hooks/useSettings'
-import { Code, FileSearch, Folder, Languages, LayoutGrid, NotepadText, Palette, Sparkle } from 'lucide-react'
+import { Code, FileSearch, Folder, ImagePlus, Languages, LayoutGrid, NotepadText, Palette, Sparkle } from 'lucide-react'
 import type { FC } from 'react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -35,6 +35,12 @@ const LaunchpadPage: FC = () => {
       text: t('title.paintings'),
       path: `/paintings/${defaultPaintingProvider}`,
       bgColor: 'linear-gradient(135deg, #EC4899, #F472B6)' // 绘画：活力粉色，代表创造力和艺术
+    },
+    {
+      icon: <ImagePlus size={32} className="icon" />,
+      text: t('title.imagetoimage'),
+      path: '/imagetoimage',
+      bgColor: 'linear-gradient(135deg, #8B5CF6, #A855F7)' // 图生图：蓝紫色渐变，代表创新和科技
     },
     {
       icon: <Sparkle size={32} className="icon" />,

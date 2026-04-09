@@ -1940,6 +1940,59 @@
     "preview": "預覽",
     "split": "分割畫面"
   },
+  "imagetoimage": {
+    "assistant": "助手",
+    "assistant_list": "助手列表",
+    "assistant_name_placeholder": "助手名稱",
+    "assistant_placeholder": "選擇助手（可選）",
+    "clear_all_records_confirm": "確定清空該助手下所有會話的生成記錄？",
+    "clear_history": "清空歷史",
+    "clear_history_confirm": "確定清空該會話的所有生成記錄？",
+    "clear_images": "清空圖片",
+    "copied": "已複製",
+    "copy": "複製",
+    "default_topic": "預設話題",
+    "delete_assistant_confirm": "確定刪除該助手？所有會話和記錄將被刪除。",
+    "delete_record_confirm": "確定刪除該生成記錄？",
+    "delete_session_confirm": "確定刪除該會話？所有記錄將被刪除。",
+    "edit_assistant_prompt": "編輯助手提示詞",
+    "edit_prompt": "編輯提示詞",
+    "export_images": "導出圖片",
+    "export_images_failed": "{{count}} 張圖片無法下載，連結可能已過期",
+    "export_partial_warning": "{{total}} 張圖片中有 {{failed}} 張導出失敗",
+    "generate_button": "生成圖片",
+    "generate_failed": "圖像生成失敗",
+    "generating": "正在生成圖片，請稍候...",
+    "history_section": {
+      "empty": "暫無生成記錄，點擊生成按鈕開始創作",
+      "title": "生成歷史"
+    },
+    "image": "圖片",
+    "model": "模型",
+    "no_images_generated": "未生成任何圖像",
+    "no_images_to_export": "沒有可導出的圖片",
+    "no_model_available": "暫無可用模型，請先在設定中配置服務商和模型",
+    "no_prompt": "無提示詞",
+    "param_n": "數量",
+    "param_quality": "品質",
+    "param_response_format": "格式",
+    "param_size": "尺寸",
+    "prompt_or_image_required": "請輸入提示詞或上傳圖片",
+    "prompt_section": {
+      "negative_placeholder": "不想要的內容，例如：模糊、低品質...",
+      "negative_prompt": "負向提示詞（可選）",
+      "negative_prompt_placeholder": "不想要的內容，例如：模糊、低品質...",
+      "placeholder": "描述你想要的圖片，例如：一隻可愛的小貓...",
+      "title": "提示詞"
+    },
+    "rename_assistant": "請輸入新的助手名稱",
+    "resend": "重新發送",
+    "select_model": "選擇模型",
+    "select_provider": "選擇服務商",
+    "session_name_placeholder": "會話名稱",
+    "subtitle": "對接國內 AI 圖生圖介面",
+    "title": "圖生圖"
+  },
   "import": {
     "chatgpt": {
       "assistant_name": "ChatGPT 匯入",
@@ -2119,6 +2172,7 @@
   },
   "launchpad": {
     "apps": "應用",
+    "imagetoimage": "[to be translated]:Text to Image",
     "minapps": "小程式"
   },
   "lmstudio": {
@@ -5850,6 +5904,7 @@
     "code": "程式碼",
     "files": "檔案",
     "home": "首頁",
+    "imagetoimage": "[to be translated]:Text to Image",
     "knowledge": "知識庫",
     "launchpad": "啟動台",
     "mcp-servers": "MCP 伺服器",

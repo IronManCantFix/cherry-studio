@@ -33,7 +33,8 @@ import {
   isOpenAICompatibleProvider,
   isOpenAIProvider,
   isSupportAnthropicPromptCacheProvider,
-  isVertexProvider
+  isVertexProvider,
+  isVolcengineImageProvider
 } from '@renderer/utils/provider'
 import { Button, Divider, Flex, Input, Select, Space, Switch, Tooltip } from 'antd'
 import Link from 'antd/es/typography/Link'
@@ -334,6 +335,14 @@ const ProviderSetting: FC<Props> = ({ providerId, isOnboarding = false }) => {
 
     if (isOllamaProvider(provider)) {
       return formattedApiHost + '/chat'
+    }
+
+    if (provider.type === 'new-api-image') {
+      return formattedApiHost
+    }
+
+    if (isVolcengineImageProvider(provider)) {
+      return formattedApiHost
     }
 
     if (isOpenAICompatibleProvider(provider)) {

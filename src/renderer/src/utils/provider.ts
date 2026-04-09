@@ -119,7 +119,8 @@ const SUPPORT_URL_CONTEXT_PROVIDER_TYPES = [
   'vertexai',
   'anthropic',
   'azure-openai',
-  'new-api'
+  'new-api',
+  'new-api-image'
 ] as const satisfies ProviderType[]
 
 export const isSupportUrlContextProvider = (provider: Provider) => {
@@ -137,7 +138,11 @@ export const isGeminiWebSearchProvider = (provider: Provider) => {
 }
 
 export const isNewApiProvider = (provider: Provider) => {
-  return ['new-api', 'cherryin', 'aionly'].includes(provider.id) || provider.type === 'new-api'
+  return ['new-api', 'cherryin', 'aionly'].includes(provider.id) || ['new-api', 'new-api-image'].includes(provider.type)
+}
+
+export const isVolcengineImageProvider = (provider: Provider) => {
+  return provider.type === 'volcengine-image'
 }
 
 /**
@@ -146,7 +151,7 @@ export const isNewApiProvider = (provider: Provider) => {
  * @returns {boolean} 是否为 OpenAI 兼容提供商
  */
 export function isOpenAICompatibleProvider(provider: Provider): boolean {
-  return ['openai', 'new-api', 'mistral'].includes(provider.type)
+  return ['openai', 'new-api', 'new-api-image', 'volcengine-image', 'mistral'].includes(provider.type)
 }
 
 export function isOpenAIProvider(provider: Provider): boolean {
@@ -189,7 +194,11 @@ export const NOT_SUPPORT_API_KEY_PROVIDERS: readonly SystemProviderId[] = [
   'copilot'
 ]
 
-export const NOT_SUPPORT_API_KEY_PROVIDER_TYPES: readonly ProviderType[] = ['vertexai', 'aws-bedrock']
+export const NOT_SUPPORT_API_KEY_PROVIDER_TYPES: readonly ProviderType[] = [
+  'vertexai',
+  'aws-bedrock',
+  'volcengine-image'
+]
 
 // https://platform.claude.com/docs/en/build-with-claude/prompt-caching#1-hour-cache-duration
 export const isSupportAnthropicPromptCacheProvider = (provider: Provider) => {

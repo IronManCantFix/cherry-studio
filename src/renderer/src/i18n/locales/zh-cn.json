@@ -1940,6 +1940,59 @@
     "preview": "预览",
     "split": "分屏"
   },
+  "imagetoimage": {
+    "assistant": "助手",
+    "assistant_list": "助手列表",
+    "assistant_name_placeholder": "助手名称",
+    "assistant_placeholder": "选择助手（可选）",
+    "clear_all_records_confirm": "确定清空该助手下所有会话的生成记录？",
+    "clear_history": "清空历史",
+    "clear_history_confirm": "确定清空该会话的所有生成记录？",
+    "clear_images": "清空图片",
+    "copied": "已复制",
+    "copy": "复制",
+    "default_topic": "默认话题",
+    "delete_assistant_confirm": "确定删除该助手？所有会话和记录将被删除。",
+    "delete_record_confirm": "确定删除该生成记录？",
+    "delete_session_confirm": "确定删除该会话？所有记录将被删除。",
+    "edit_assistant_prompt": "编辑助手提示词",
+    "edit_prompt": "编辑提示词",
+    "export_images": "导出图片",
+    "export_images_failed": "{{count}} 张图片无法下载，链接可能已过期",
+    "export_partial_warning": "{{total}} 张图片中有 {{failed}} 张导出失败",
+    "generate_button": "生成图片",
+    "generate_failed": "图像生成失败",
+    "generating": "正在生成图片，请稍候...",
+    "history_section": {
+      "empty": "暂无生成记录，点击生成按钮开始创作",
+      "title": "生成历史"
+    },
+    "image": "图片",
+    "model": "模型",
+    "no_images_generated": "未生成任何图像",
+    "no_images_to_export": "没有可导出的图片",
+    "no_model_available": "暂无可用模型，请先在设置中配置服务商和模型",
+    "no_prompt": "无提示词",
+    "param_n": "数量",
+    "param_quality": "质量",
+    "param_response_format": "格式",
+    "param_size": "尺寸",
+    "prompt_or_image_required": "请输入提示词或上传图片",
+    "prompt_section": {
+      "negative_placeholder": "不想要的内容，例如：模糊、低质量...",
+      "negative_prompt": "负向提示词（可选）",
+      "negative_prompt_placeholder": "不想要的内容，例如：模糊、低质量...",
+      "placeholder": "描述你想要的图片，例如：一只可爱的小猫...",
+      "title": "提示词"
+    },
+    "rename_assistant": "请输入新的助手名称",
+    "resend": "重新发送",
+    "select_model": "选择模型",
+    "select_provider": "选择服务商",
+    "session_name_placeholder": "会话名称",
+    "subtitle": "对接国内 AI 图生图接口",
+    "title": "图生图"
+  },
   "import": {
     "chatgpt": {
       "assistant_name": "ChatGPT 导入",
@@ -2119,6 +2172,7 @@
   },
   "launchpad": {
     "apps": "应用",
+    "imagetoimage": "图生图",
     "minapps": "小程序"
   },
   "lmstudio": {
@@ -5850,6 +5904,7 @@
     "code": "Code",
     "files": "文件",
     "home": "首页",
+    "imagetoimage": "图生图",
     "knowledge": "知识库",
     "launchpad": "启动台",
     "mcp-servers": "MCP 服务器",

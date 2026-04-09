@@ -14,6 +14,7 @@ import AgentPage from './pages/agents/AgentPage'
 import CodeToolsPage from './pages/code/CodeToolsPage'
 import FilesPage from './pages/files/FilesPage'
 import HomePage from './pages/home/HomePage'
+import ImageToImagePage from './pages/imagetoimage/ImageToImagePage'
 import KnowledgePage from './pages/knowledge/KnowledgePage'
 import LaunchpadPage from './pages/launchpad/LaunchpadPage'
 import MinAppPage from './pages/minapps/MinAppPage'
@@ -38,6 +39,7 @@ const Router: FC = () => {
           <Route path="/agents" element={<AgentPage />} />
           <Route path="/store" element={<AssistantPresetsPage />} />
           <Route path="/paintings/*" element={<PaintingsRoutePage />} />
+          <Route path="/imagetoimage" element={<ImageToImagePage />} />
           <Route path="/translate" element={<TranslatePage />} />
           <Route path="/files" element={<FilesPage />} />
           <Route path="/notes" element={<NotesPage />} />

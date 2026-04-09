@@ -259,6 +259,8 @@ const PopupContainer: React.FC<Props> = ({ provider, resolve }) => {
               { label: 'Anthropic', value: 'anthropic' },
               { label: 'Azure OpenAI', value: 'azure-openai' },
               { label: 'New API', value: 'new-api' },
+              { label: 'New API (IMAGE)', value: 'new-api-image' },
+              { label: '火山引擎图像', value: 'volcengine-image' },
               { label: 'CherryIN', value: 'cherryin-type' },
               { label: 'Ollama', value: 'ollama' }
             ]}

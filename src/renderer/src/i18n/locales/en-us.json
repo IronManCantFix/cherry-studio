@@ -1940,6 +1940,59 @@
     "preview": "Preview",
     "split": "Split"
   },
+  "imagetoimage": {
+    "assistant": "Assistant",
+    "assistant_list": "Assistants",
+    "assistant_name_placeholder": "Assistant name",
+    "assistant_placeholder": "Select an assistant (optional)",
+    "clear_all_records_confirm": "Clear all generation records for this assistant?",
+    "clear_history": "Clear History",
+    "clear_history_confirm": "Clear all generation records in this session?",
+    "clear_images": "Clear Images",
+    "copied": "Copied",
+    "copy": "Copy",
+    "default_topic": "Default Topic",
+    "delete_assistant_confirm": "Delete this assistant? All sessions and records will be lost.",
+    "delete_record_confirm": "Delete this generation record?",
+    "delete_session_confirm": "Delete this session? All records will be lost.",
+    "edit_assistant_prompt": "Edit Assistant Prompt",
+    "edit_prompt": "Edit Prompt",
+    "export_images": "Export Images",
+    "export_images_failed": "{{count}} image(s) could not be downloaded, links may have expired",
+    "export_partial_warning": "{{failed}} of {{total}} image(s) failed to export",
+    "generate_button": "Generate Image",
+    "generate_failed": "Image generation failed",
+    "generating": "Generating image, please wait...",
+    "history_section": {
+      "empty": "No generation records yet. Click generate to start creating.",
+      "title": "Generation History"
+    },
+    "image": "Image",
+    "model": "Model",
+    "no_images_generated": "No images were generated",
+    "no_images_to_export": "No images to export",
+    "no_model_available": "No models available. Please configure a provider and model in settings first.",
+    "no_prompt": "No prompt",
+    "param_n": "Count",
+    "param_quality": "Quality",
+    "param_response_format": "Format",
+    "param_size": "Size",
+    "prompt_or_image_required": "Please enter a prompt or upload an image",
+    "prompt_section": {
+      "negative_placeholder": "Content you don't want, e.g., blurry, low quality...",
+      "negative_prompt": "Negative prompt (optional)",
+      "negative_prompt_placeholder": "Content you don't want, e.g., blurry, low quality...",
+      "placeholder": "Describe the image you want, e.g., A cute little cat...",
+      "title": "Prompt"
+    },
+    "rename_assistant": "Enter new assistant name",
+    "resend": "Resend",
+    "select_model": "Select model",
+    "select_provider": "Select provider",
+    "session_name_placeholder": "Session name",
+    "subtitle": "Connect to domestic AI image generation APIs",
+    "title": "Text to Image"
+  },
   "import": {
     "chatgpt": {
       "assistant_name": "ChatGPT Import",
@@ -2119,6 +2172,7 @@
   },
   "launchpad": {
     "apps": "Apps",
+    "imagetoimage": "Text to Image",
     "minapps": "Minapps"
   },
   "lmstudio": {
@@ -5850,6 +5904,7 @@
     "code": "Code",
     "files": "Files",
     "home": "Home",
+    "imagetoimage": "Text to Image",
     "knowledge": "Knowledge Base",
     "launchpad": "Launchpad",
     "mcp-servers": "MCP Servers",

@@ -15,6 +15,8 @@ export const ProviderTypeSchema = z.enum([
   'aws-bedrock',
   'vertex-anthropic',
   'new-api',
+  'new-api-image',
+  'volcengine-image',
   'gateway',
   'ollama'
 ])

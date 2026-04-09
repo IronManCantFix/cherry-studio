@@ -26,6 +26,7 @@ import { createVoyage, type VoyageProviderSettings } from 'voyage-ai-provider'
 
 import { type AihubmixProviderSettings, createAihubmix } from '../custom/aihubmix-provider'
 import { createNewApi, type NewApiProviderSettings } from '../custom/newapi-provider'
+import { createVolcengineImage, type VolcengineImageProviderSettings } from '../custom/volcengine-image-provider'
 
 /**
  * Google Vertex AI Extension
@@ -201,6 +202,15 @@ export const VoyageExtension = ProviderExtension.create({
 } as const satisfies ProviderExtensionConfig<VoyageProviderSettings, ProviderV3, 'voyage'>)
 
 /**
+ * Volcengine Image Extension - 火山引擎图像生成
+ */
+export const VolcengineImageExtension = ProviderExtension.create({
+  name: 'volcengine-image',
+  supportsImageGeneration: true,
+  create: createVolcengineImage
+} as const satisfies ProviderExtensionConfig<VolcengineImageProviderSettings, ProviderV3, 'volcengine-image'>)
+
+/**
  * 所有项目特定的 Extensions
  */
 export const extensions = [
@@ -218,5 +228,6 @@ export const extensions = [
   NewApiExtension,
   VoyageExtension,
   TogetherAIExtension,
-  GroqExtension
+  GroqExtension,
+  VolcengineImageExtension
 ] as const

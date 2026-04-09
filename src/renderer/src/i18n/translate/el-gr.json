@@ -1940,6 +1940,55 @@
     "preview": "Προεπισκόπηση",
     "split": "Διαχωρισμός"
   },
+  "imagetoimage": {
+    "assistant": "[to be translated]:Assistant",
+    "assistant_list": "[to be translated]:Assistants",
+    "assistant_name_placeholder": "[to be translated]:Assistant name",
+    "assistant_placeholder": "[to be translated]:Select an assistant (optional)",
+    "clear_all_records_confirm": "[to be translated]:Clear all generation records for this assistant?",
+    "clear_history": "[to be translated]:Clear History",
+    "clear_history_confirm": "[to be translated]:Clear all generation records in this session?",
+    "clear_images": "[to be translated]:Clear Images",
+    "copied": "[to be translated]:Copied",
+    "copy": "[to be translated]:Copy",
+    "default_topic": "[to be translated]:Default Topic",
+    "delete_assistant_confirm": "[to be translated]:Delete this assistant? All sessions and records will be lost.",
+    "delete_record_confirm": "[to be translated]:Delete this generation record?",
+    "delete_session_confirm": "[to be translated]:Delete this session? All records will be lost.",
+    "edit_assistant_prompt": "[to be translated]:Edit Assistant Prompt",
+    "edit_prompt": "[to be translated]:Edit Prompt",
+    "generate_button": "[to be translated]:Generate Image",
+    "generate_failed": "[to be translated]:Image generation failed",
+    "generating": "[to be translated]:Generating image, please wait...",
+    "history_section": {
+      "empty": "[to be translated]:No generation records yet. Click generate to start creating.",
+      "title": "[to be translated]:Generation History"
+    },
+    "image": "[to be translated]:Image",
+    "model": "[to be translated]:Model",
+    "no_images_generated": "[to be translated]:No images were generated",
+    "no_model_available": "[to be translated]:No models available. Please configure a provider and model in settings first.",
+    "no_prompt": "[to be translated]:No prompt",
+    "param_n": "[to be translated]:Count",
+    "param_quality": "[to be translated]:Quality",
+    "param_response_format": "[to be translated]:Format",
+    "param_size": "[to be translated]:Size",
+    "prompt_or_image_required": "[to be translated]:Please enter a prompt or upload an image",
+    "prompt_section": {
+      "negative_placeholder": "[to be translated]:Content you don't want, e.g., blurry, low quality...",
+      "negative_prompt": "[to be translated]:Negative prompt (optional)",
+      "negative_prompt_placeholder": "[to be translated]:Content you don't want, e.g., blurry, low quality...",
+      "placeholder": "[to be translated]:Describe the image you want, e.g., A cute little cat...",
+      "title": "[to be translated]:Prompt"
+    },
+    "rename_assistant": "[to be translated]:Enter new assistant name",
+    "resend": "[to be translated]:Resend",
+    "select_model": "[to be translated]:Select model",
+    "select_provider": "[to be translated]:Select provider",
+    "session_name_placeholder": "[to be translated]:Session name",
+    "subtitle": "[to be translated]:Connect to domestic AI image generation APIs",
+    "title": "[to be translated]:Text to Image"
+  },
   "import": {
     "chatgpt": {
       "assistant_name": "Εισαγωγή ChatGPT",
@@ -2119,6 +2168,7 @@
   },
   "launchpad": {
     "apps": "Εφαρμογές",
+    "imagetoimage": "[to be translated]:Text to Image",
     "minapps": "Μικρές εφαρμογές"
   },
   "lmstudio": {
@@ -5850,6 +5900,7 @@
     "code": "Κώδικας",
     "files": "Αρχεία",
     "home": "Αρχική Σελίδα",
+    "imagetoimage": "[to be translated]:Text to Image",
     "knowledge": "Βάση Γνώσης",
     "launchpad": "Πίνακας Εκκίνησης",
     "mcp-servers": "Διακομιστές MCP",

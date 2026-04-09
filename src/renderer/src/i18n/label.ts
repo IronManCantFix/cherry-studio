@@ -148,6 +148,7 @@ const titleKeyMap = {
   home: 'title.home',
   knowledge: 'title.knowledge',
   launchpad: 'title.launchpad',
+  imagetoimage: 'title.imagetoimage',
   'mcp-servers': 'title.mcp-servers',
   memories: 'title.memories',
   notes: 'title.notes',

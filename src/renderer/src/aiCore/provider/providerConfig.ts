@@ -132,6 +132,8 @@ export function providerToAiSdkConfig(
     { match: (_, id) => id === 'google-vertex', build: buildVertexConfig },
     { match: (_, id) => id === 'cherryin', build: buildCherryinConfig },
     { match: (_, id) => id === 'newapi', build: buildNewApiConfig },
+    { match: (p) => p.type === 'new-api-image', build: buildNewApiImageConfig },
+    { match: (p) => p.type === 'volcengine-image', build: buildVolcengineImageConfig },
     { match: (_, id) => id === 'aihubmix', build: buildAiHubMixConfig }
   ]
 
@@ -405,6 +407,35 @@ function buildNewApiConfig(ctx: BuilderContext): ProviderConfig<'newapi'> {
       ...ctx.baseConfig,
       baseURL,
       endpointType: ctx.model.endpoint_type,
+      headers: { ...defaultAppHeaders(), ...ctx.actualProvider.extra_headers }
+    }
+  }
+}
+
+function buildNewApiImageConfig(ctx: BuilderContext): ProviderConfig<'newapi'> {
+  const baseURL = formatApiHost(ctx.baseConfig.baseURL, false)
+
+  return {
+    providerId: 'newapi',
+    endpoint: ctx.endpoint,
+    providerSettings: {
+      ...ctx.baseConfig,
+      baseURL,
+      endpointType: 'image-generation',
+      headers: { ...defaultAppHeaders(), ...ctx.actualProvider.extra_headers }
+    }
+  }
+}
+
+function buildVolcengineImageConfig(ctx: BuilderContext): ProviderConfig<'volcengine-image'> {
+  const baseURL = formatApiHost(ctx.baseConfig.baseURL, false)
+
+  return {
+    providerId: 'volcengine-image',
+    endpoint: ctx.endpoint,
+    providerSettings: {
+      ...ctx.baseConfig,
+      baseURL,
       headers: { ...defaultAppHeaders(), ...ctx.actualProvider.extra_headers }
     }
   }
