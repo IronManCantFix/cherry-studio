@@ -11,7 +11,7 @@ import {
 import db from '@renderer/databases'
 import { useAssistant } from '@renderer/hooks/useAssistant'
 import { useInputText } from '@renderer/hooks/useInputText'
-import { useMessageOperations, useTopicLoading } from '@renderer/hooks/useMessageOperations'
+import { selectPendingRequestCount, useMessageOperations, useTopicLoading } from '@renderer/hooks/useMessageOperations'
 import { useSettings } from '@renderer/hooks/useSettings'
 import { useShortcut } from '@renderer/hooks/useShortcuts'
 import { useTextareaResize } from '@renderer/hooks/useTextareaResize'
@@ -166,6 +166,7 @@ const InputbarInner: FC<InputbarInnerProps> = ({ assistant: initialAssistant, se
   const { t } = useTranslation()
   const { pauseMessages } = useMessageOperations(topic)
   const loading = useTopicLoading(topic)
+  const pendingRequestCount = useAppSelector(selectPendingRequestCount)
   const dispatch = useAppDispatch()
   const isVisionAssistant = useMemo(() => isVisionModel(model), [model])
   const isGenerateImageAssistant = useMemo(() => isGenerateImageModel(model), [model])
@@ -505,7 +506,8 @@ const InputbarInner: FC<InputbarInnerProps> = ({ assistant: initialAssistant, se
       onHeightChange={setCustomHeight}
       resizeTextArea={resizeTextArea}
       focusTextarea={focusTextarea}
-      isLoading={loading}
+      // 有任何待处理请求时禁用发送，防止跨 topic 的消息显示问题
+      isLoading={loading || pendingRequestCount > 0}
       supportedExts={supportedExts}
       onPause={onPause}
       handleSendMessage={sendMessage}

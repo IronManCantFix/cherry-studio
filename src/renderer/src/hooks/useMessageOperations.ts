@@ -41,6 +41,12 @@ export const selectNewDisplayCount = createSelector(
   (messagesState) => messagesState.displayCount
 )
 
+// 全局待处理请求数量
+export const selectPendingRequestCount = createSelector(
+  [selectMessagesState],
+  (messagesState) => messagesState.pendingRequestCount || 0
+)
+
 /**
  * Hook 提供针对特定主题的消息操作方法。 / Hook providing various operations for messages within a specific topic.
  * @param topic 当前主题对象。 / The current topic object.

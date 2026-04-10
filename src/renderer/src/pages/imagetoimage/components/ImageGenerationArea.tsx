@@ -319,7 +319,19 @@ const ImageGenerationArea: React.FC = () => {
         }
 
         const data = await response.json()
-        if (data.data && Array.isArray(data.data)) {
+
+        // 优先使用 metadata.output 格式（阿里云/newapi 格式）
+        if (data.metadata?.output?.choices?.[0]?.message?.content) {
+          const content = data.metadata.output.choices[0].message.content
+          for (const item of content) {
+            if (item.image) {
+              generatedImageUrls.push(item.image)
+            }
+          }
+        }
+
+        // 备用：使用标准 data 格式
+        if (generatedImageUrls.length === 0 && data.data && Array.isArray(data.data)) {
           for (const item of data.data) {
             if (item.url) generatedImageUrls.push(item.url)
             else if (item.b64_json) generatedImageUrls.push(`data:image/png;base64,${item.b64_json}`)

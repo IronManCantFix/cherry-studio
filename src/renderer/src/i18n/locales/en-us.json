@@ -1988,9 +1988,9 @@
     "rename_assistant": "Enter new assistant name",
     "resend": "Resend",
     "select_model": "Select model",
+    "select_model_first": "Please select a provider and model first",
     "select_provider": "Select provider",
     "session_name_placeholder": "Session name",
-    "select_model_first": "Please select a provider and model first",
     "stop": "Stop",
     "subtitle": "Connect to domestic AI image generation APIs",
     "title": "Text to Image"

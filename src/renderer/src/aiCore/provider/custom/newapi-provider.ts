@@ -13,14 +13,52 @@
 import { AnthropicMessagesLanguageModel } from '@ai-sdk/anthropic/internal'
 import { GoogleGenerativeAILanguageModel } from '@ai-sdk/google/internal'
 import { OpenAIResponsesLanguageModel } from '@ai-sdk/openai/internal'
-import {
-  OpenAICompatibleChatLanguageModel,
-  OpenAICompatibleEmbeddingModel,
-  OpenAICompatibleImageModel
-} from '@ai-sdk/openai-compatible'
-import type { EmbeddingModelV3, ImageModelV3, LanguageModelV3, ProviderV3 } from '@ai-sdk/provider'
+import { OpenAICompatibleChatLanguageModel, OpenAICompatibleEmbeddingModel } from '@ai-sdk/openai-compatible'
+import type {
+  EmbeddingModelV3,
+  ImageModelV3,
+  ImageModelV3CallOptions,
+  ImageModelV3ProviderMetadata,
+  ImageModelV3Usage,
+  LanguageModelV3,
+  ProviderV3,
+  SharedV3Warning
+} from '@ai-sdk/provider'
 import type { FetchFunction } from '@ai-sdk/provider-utils'
-import { loadApiKey, withoutTrailingSlash } from '@ai-sdk/provider-utils'
+import {
+  combineHeaders,
+  createJsonErrorResponseHandler,
+  createJsonResponseHandler,
+  loadApiKey,
+  postJsonToApi,
+  withoutTrailingSlash
+} from '@ai-sdk/provider-utils'
+import * as z from 'zod'
+
+// NewAPI 图像生成响应 schema - 支持标准格式和 metadata 格式
+const newApiImageResponseSchema = z
+  .object({
+    data: z.array(z.object({ b64_json: z.string().optional(), url: z.string().optional() })).optional(),
+    metadata: z
+      .object({
+        output: z
+          .object({
+            choices: z.array(
+              z.object({
+                finish_reason: z.string().optional(),
+                message: z.object({
+                  content: z.array(z.object({ image: z.string() }))
+                })
+              })
+            )
+          })
+          .optional()
+      })
+      .optional()
+  })
+  .passthrough()
+
+export type NewApiImageResponse = z.infer<typeof newApiImageResponseSchema>
 
 export const NEWAPI_PROVIDER_NAME = 'newapi' as const
 
@@ -129,13 +167,108 @@ export function createNewApi(options: NewApiProviderSettings = {}): NewApiProvid
       fetch: customFetch
     })
 
-  provider.imageModel = (modelId: string) =>
-    new OpenAICompatibleImageModel(modelId, {
+  // 自定义 ImageModel - 处理 newapi 的特殊响应格式
+  // newapi 可能返回两种格式:
+  // 1. 标准格式: { data: [{ b64_json: "..." }] }
+  // 2. metadata 格式: { metadata: { output: { choices: [{ message: { content: [{ image: "url" }] } }] } } }
+  provider.imageModel = (modelId: string): ImageModelV3 => {
+    const imageUrl = ({ path }: { path: string; modelId: string }) => `${withoutTrailingSlash(baseURL)}${path}`
+
+    // 下载图片并转换为 base64
+    const downloadImageAsBase64 = async (imageUrl: string): Promise<string> => {
+      const response = await (customFetch || fetch)(imageUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to download image: ${response.status} ${response.statusText}`)
+      }
+      const arrayBuffer = await response.arrayBuffer()
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+      return base64
+    }
+
+    return {
+      specificationVersion: 'v3',
       provider: `${NEWAPI_PROVIDER_NAME}.image`,
-      url,
-      headers: authHeaders,
-      fetch: customFetch
-    })
+      modelId,
+      maxImagesPerCall: 10,
+
+      async doGenerate(options: ImageModelV3CallOptions): Promise<{
+        images: string[]
+        warnings: SharedV3Warning[]
+        usage?: ImageModelV3Usage
+        providerMetadata?: ImageModelV3ProviderMetadata
+        response: { timestamp: Date; modelId: string; headers: Record<string, string> }
+      }> {
+        const { prompt, n = 1, size, abortSignal } = options
+
+        const result = await postJsonToApi({
+          url: imageUrl({ path: '/images/generations', modelId }),
+          headers: combineHeaders(authHeaders(), options.headers),
+          body: {
+            model: modelId,
+            prompt,
+            n,
+            size,
+            response_format: 'url'
+          },
+          failedResponseHandler: createJsonErrorResponseHandler({
+            errorSchema: z.object({ message: z.string() }),
+            errorToMessage: (error) => error.message || 'Image generation failed'
+          }),
+          successfulResponseHandler: createJsonResponseHandler(newApiImageResponseSchema),
+          abortSignal,
+          fetch: customFetch
+        })
+
+        const response = result.value
+
+        // 解析图片 URL - 支持两种格式，返回 base64 字符串数组
+        const images: string[] = []
+
+        // 优先使用 metadata.output 格式（newapi/阿里云格式）
+        const metadata = response.metadata
+        if (metadata?.output?.choices?.[0]?.message?.content) {
+          const content = metadata.output.choices[0].message.content
+          for (const item of content) {
+            if (item.image) {
+              try {
+                const base64 = await downloadImageAsBase64(item.image)
+                images.push(base64)
+              } catch (error) {
+                console.error('Failed to download image:', item.image, error)
+              }
+            }
+          }
+        }
+
+        // 备用：使用标准 data 格式
+        const data = response.data
+        if (images.length === 0 && data) {
+          for (const item of data) {
+            if (item.b64_json) {
+              images.push(item.b64_json)
+            } else if (item.url) {
+              try {
+                const base64 = await downloadImageAsBase64(item.url)
+                images.push(base64)
+              } catch (error) {
+                console.error('Failed to download image:', item.url, error)
+              }
+            }
+          }
+        }
+
+        return {
+          images,
+          warnings: [],
+          response: {
+            timestamp: new Date(),
+            modelId,
+            headers: {}
+          }
+        }
+      }
+    }
+  }
 
   return provider as NewApiProvider
 }

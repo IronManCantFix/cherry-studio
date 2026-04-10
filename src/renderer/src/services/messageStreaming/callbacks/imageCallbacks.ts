@@ -12,16 +12,29 @@ const logger = loggerService.withContext('ImageCallbacks')
 interface ImageCallbacksDependencies {
   blockManager: BlockManager
   assistantMsgId: string
+  topicId: string
+  getState: () => any
 }
 
 export const createImageCallbacks = (deps: ImageCallbacksDependencies) => {
-  const { blockManager, assistantMsgId } = deps
+  const { blockManager, assistantMsgId, topicId, getState } = deps
 
   // 内部维护的状态
   let imageBlockId: string | null = null
+  // 保存发送消息时的 topicId，用于验证回调是否应该处理
+  const originalTopicId = topicId
 
   return {
     onImageCreated: async () => {
+      // 检查当前 topic 是否与发送消息时的 topic 一致
+      const state = getState()
+      const currentTopicId = state.topics?.activeTopicId
+      if (currentTopicId !== originalTopicId) {
+        logger.info(
+          `[ImageCallbacks] Topic changed from ${originalTopicId} to ${currentTopicId}, ignoring image created callback`
+        )
+        return
+      }
       if (blockManager.hasInitialPlaceholder) {
         const initialChanges = {
           type: MessageBlockType.IMAGE,
@@ -39,6 +52,13 @@ export const createImageCallbacks = (deps: ImageCallbacksDependencies) => {
     },
 
     onImageDelta: (imageData: GenerateImageResponse) => {
+      // 检查当前 topic 是否与发送消息时的 topic 一致
+      const state = getState()
+      const currentTopicId = state.topics?.activeTopicId
+      if (currentTopicId !== originalTopicId) {
+        return
+      }
+
       const imageUrl = imageData.images?.[0] || 'placeholder_image_url'
       if (imageBlockId) {
         const changes: Partial<ImageMessageBlock> = {
@@ -51,6 +71,16 @@ export const createImageCallbacks = (deps: ImageCallbacksDependencies) => {
     },
 
     onImageGenerated: async (imageData?: GenerateImageResponse) => {
+      // 检查当前 topic 是否与发送消息时的 topic 一致
+      const state = getState()
+      const currentTopicId = state.topics?.activeTopicId
+      if (currentTopicId !== originalTopicId) {
+        logger.info(
+          `[ImageCallbacks] Topic changed from ${originalTopicId} to ${currentTopicId}, ignoring image generated callback`
+        )
+        return
+      }
+
       // For base64 images, persist to disk to avoid sending huge data URIs in future messages
       const buildImageBlockFields = async (imageData: GenerateImageResponse): Promise<Partial<ImageMessageBlock>> => {
         const imageUrl: string = imageData.images?.[0] || 'placeholder_image_url'

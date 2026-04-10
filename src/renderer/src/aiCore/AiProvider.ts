@@ -464,6 +464,7 @@ export default class AiProvider {
     const images: string[] = []
     if (result.images) {
       for (const image of result.images) {
+        // GeneratedFile 只有 base64 属性
         if (image.base64) {
           images.push(`data:${image.mediaType || 'image/png'};base64,${image.base64}`)
         }

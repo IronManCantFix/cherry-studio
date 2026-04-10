@@ -1988,9 +1988,9 @@
     "rename_assistant": "请输入新的助手名称",
     "resend": "重新发送",
     "select_model": "选择模型",
+    "select_model_first": "请先选择服务商和模型",
     "select_provider": "选择服务商",
     "session_name_placeholder": "会话名称",
-    "select_model_first": "请先选择服务商和模型",
     "stop": "停止生成",
     "subtitle": "对接国内 AI 图生图接口",
     "title": "图生图"

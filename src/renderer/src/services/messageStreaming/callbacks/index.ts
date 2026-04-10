@@ -49,7 +49,9 @@ export const createCallbacks = (deps: CallbacksDependencies) => {
 
   const imageCallbacks = createImageCallbacks({
     blockManager,
-    assistantMsgId
+    assistantMsgId,
+    topicId,
+    getState
   })
 
   const citationCallbacks = createCitationCallbacks({

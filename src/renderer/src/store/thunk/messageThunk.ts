@@ -88,6 +88,7 @@ const finishTopicLoading = async (topicId: string) => {
   await waitForTopicQueue(topicId)
   store.dispatch(newMessagesActions.setTopicLoading({ topicId, loading: false }))
   store.dispatch(newMessagesActions.setTopicFulfilled({ topicId, fulfilled: true }))
+  store.dispatch(newMessagesActions.decrementPendingRequestCount())
 }
 
 type AgentSessionContext = {
@@ -625,6 +626,7 @@ const fetchAndProcessAgentResponseImpl = async (
   let callbacks: StreamProcessorCallbacks = {}
   try {
     dispatch(newMessagesActions.setTopicLoading({ topicId, loading: true }))
+    dispatch(newMessagesActions.incrementPendingRequestCount())
 
     const blockManager = new BlockManager({
       dispatch,
@@ -773,6 +775,7 @@ const fetchAndProcessAgentResponseImpl = async (
     }
   } finally {
     dispatch(newMessagesActions.setTopicLoading({ topicId, loading: false }))
+    dispatch(newMessagesActions.decrementPendingRequestCount())
   }
 }
 
@@ -954,6 +957,7 @@ const fetchAndProcessAssistantResponseImpl = async (
     } finally {
       // 确保无论如何都设置 loading 为 false（onError 回调中已设置，这里是保险）
       dispatch(newMessagesActions.setTopicLoading({ topicId, loading: false }))
+      dispatch(newMessagesActions.decrementPendingRequestCount())
     }
   }
 }
@@ -1100,6 +1104,7 @@ export const loadAgentSessionMessagesThunk =
       dispatch(newMessagesActions.messagesReceived({ topicId, messages: [] }))
     } finally {
       dispatch(newMessagesActions.setTopicLoading({ topicId, loading: false }))
+      dispatch(newMessagesActions.decrementPendingRequestCount())
     }
   }
 
@@ -1927,6 +1932,7 @@ export const loadTopicMessagesThunk =
       // Could dispatch an error action here if needed
     } finally {
       dispatch(newMessagesActions.setTopicLoading({ topicId, loading: false }))
+      dispatch(newMessagesActions.decrementPendingRequestCount())
     }
   }
 
@@ -2238,6 +2244,7 @@ export const setupChannelStream = (
     })
     .finally(() => {
       dispatch(newMessagesActions.setTopicLoading({ topicId, loading: false }))
+      dispatch(newMessagesActions.decrementPendingRequestCount())
     })
 
   return {

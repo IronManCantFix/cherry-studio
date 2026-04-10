@@ -33,6 +33,8 @@ export interface MessagesState extends EntityState<Message, string> {
   loadingByTopic: Record<string, boolean>
   fulfilledByTopic: Record<string, boolean>
   displayCount: number
+  // 全局请求计数，用于防止并发发送
+  pendingRequestCount: number
 }
 
 // 3. Define the Initial State
@@ -41,7 +43,8 @@ const initialState: MessagesState = messagesAdapter.getInitialState({
   currentTopicId: null,
   loadingByTopic: {},
   fulfilledByTopic: {},
-  displayCount: 10
+  displayCount: 10,
+  pendingRequestCount: 0
 })
 
 // Payload for receiving messages (used by loadTopicMessagesThunk)
@@ -117,6 +120,14 @@ export const messagesSlice = createSlice({
     },
     setDisplayCount(state, action: PayloadAction<number>) {
       state.displayCount = action.payload
+    },
+    // 增加待处理请求计数
+    incrementPendingRequestCount(state) {
+      state.pendingRequestCount += 1
+    },
+    // 减少待处理请求计数
+    decrementPendingRequestCount(state) {
+      state.pendingRequestCount = Math.max(0, state.pendingRequestCount - 1)
     },
     messagesReceived(state, action: PayloadAction<MessagesReceivedPayload>) {
       const { topicId, messages } = action.payload
