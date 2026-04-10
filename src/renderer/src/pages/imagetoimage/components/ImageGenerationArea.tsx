@@ -53,6 +53,8 @@ const ImageGenerationArea: React.FC = () => {
     inputImageUrls: string[]
     sentAt: string
   } | null>(null)
+  // Track which session owns the current generation (for cross-session isolation)
+  const generatingSessionIdRef = useRef<string | null>(null)
 
   // Per-session draft persistence
   const draftsCache = useRef<Record<string, { prompt: string; files: File[] }>>({})
@@ -60,6 +62,9 @@ const ImageGenerationArea: React.FC = () => {
 
   const [prompt, setPrompt] = useState('')
   const [inputImages, setInputImages] = useState<File[]>([])
+
+  // Whether the current view's session is the one generating
+  const isCurrentSessionGenerating = isLoading && generatingSessionIdRef.current === currentSessionId
 
   // Save/restore draft when switching sessions
   const prevSessionIdRef = useRef(currentSessionId)
@@ -134,6 +139,7 @@ const ImageGenerationArea: React.FC = () => {
     }
 
     const sentAt = new Date().toISOString()
+    generatingSessionIdRef.current = currentSessionId
     setIsLoading(true)
     // Convert input files to persistent base64 data URLs
     const inputImageBase64List = await Promise.all(
@@ -364,6 +370,7 @@ const ImageGenerationArea: React.FC = () => {
       setPendingRecord(null)
       setStreamingImages([])
       abortControllerRef.current = null
+      generatingSessionIdRef.current = null
     }
   }
 
@@ -412,7 +419,7 @@ const ImageGenerationArea: React.FC = () => {
   return (
     <Container>
       <ImageDisplay ref={displayRef}>
-        {records.length === 0 && !pendingRecord ? (
+        {records.length === 0 && !isCurrentSessionGenerating ? (
           <EmptyState>
             <EmptyIcon>🖼️</EmptyIcon>
             <EmptyText>{t('imagetoimage.history_section.empty')}</EmptyText>
@@ -520,7 +527,7 @@ const ImageGenerationArea: React.FC = () => {
               ))}
 
               {/* Pending (loading) message */}
-              {pendingRecord && (
+              {pendingRecord && isCurrentSessionGenerating && (
                 <MessageContainer>
                   <MessageHeader>
                     <Avatar
@@ -578,10 +585,10 @@ const ImageGenerationArea: React.FC = () => {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder={t('imagetoimage.prompt_section.placeholder')}
-          disabled={isLoading}
+          disabled={isCurrentSessionGenerating}
           rows={2}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
+            if (e.key === 'Enter' && !e.shiftKey && !isCurrentSessionGenerating) {
               e.preventDefault()
               void handleGenerate()
             }
@@ -645,7 +652,7 @@ const ImageGenerationArea: React.FC = () => {
                 <ClearHistoryButton>{t('imagetoimage.clear_history')}</ClearHistoryButton>
               </Popconfirm>
             )}
-            {isLoading ? (
+            {isCurrentSessionGenerating ? (
               <StopButton onClick={handleStopGeneration}>{t('imagetoimage.stop')}</StopButton>
             ) : (
               <SendMessageButton sendMessage={handleGenerate} disabled={!prompt.trim() || isLoading} />

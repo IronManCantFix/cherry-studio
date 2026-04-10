@@ -224,11 +224,6 @@ export function reducer(state: ImageToImageState, action: Action): ImageToImageS
     }
 
     case 'ADD_RECORD': {
-      // 检查当前 activeSessionId 是否与记录的 sessionId 一致
-      // 如果不一致，说明用户已经切换了话题，不添加这条记录
-      if (state.activeSessionId !== action.payload.sessionId) {
-        return state
-      }
       // Update session updatedAt
       const sessionId = action.payload.sessionId
       return {
