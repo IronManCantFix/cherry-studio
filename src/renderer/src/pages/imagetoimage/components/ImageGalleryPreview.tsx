@@ -36,7 +36,11 @@ const ImageGalleryPreview: React.FC<ImageGalleryPreviewProps> = ({ imageUrls, ch
   const { t } = useTranslation()
   const [previewState, setPreviewState] = useState({ visible: false, current: 0 })
   const currentRef = useRef(0)
-  currentRef.current = previewState.current
+
+  const updateCurrent = useCallback((current: number) => {
+    currentRef.current = current
+    setPreviewState((prev) => ({ ...prev, current }))
+  }, [])
 
   const handleCopyImage = useCallback(
     async (src: string) => {
@@ -66,9 +70,12 @@ const ImageGalleryPreview: React.FC<ImageGalleryPreviewProps> = ({ imageUrls, ch
     [t]
   )
 
-  const navigateTo = useCallback((index: number) => {
-    setPreviewState((prev) => ({ ...prev, current: index }))
-  }, [])
+  const navigateTo = useCallback(
+    (index: number) => {
+      updateCurrent(index)
+    },
+    [updateCurrent]
+  )
 
   if (imageUrls.length === 0) return <>{children}</>
 
@@ -76,12 +83,14 @@ const ImageGalleryPreview: React.FC<ImageGalleryPreviewProps> = ({ imageUrls, ch
     <AntImage.PreviewGroup
       preview={{
         visible: previewState.visible,
-        current: previewState.current,
         onVisibleChange: (visible: boolean, _prevValue: boolean, current: number) => {
-          setPreviewState({ visible, current })
+          if (visible) {
+            updateCurrent(current)
+          }
+          setPreviewState((prev) => ({ ...prev, visible }))
         },
-        onChange: (current) => {
-          setPreviewState((prev) => ({ ...prev, current }))
+        onChange: (current: number) => {
+          updateCurrent(current)
         },
         toolbarRender: (
           _,

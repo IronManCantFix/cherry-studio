@@ -1982,7 +1982,7 @@
       "negative_placeholder": "Content you don't want, e.g., blurry, low quality...",
       "negative_prompt": "Negative prompt (optional)",
       "negative_prompt_placeholder": "Content you don't want, e.g., blurry, low quality...",
-      "placeholder": "Describe the image you want, e.g., A cute little cat...",
+      "placeholder": "Type your message here, press Enter to send",
       "title": "Prompt"
     },
     "rename_assistant": "Enter new assistant name",
@@ -1990,6 +1990,8 @@
     "select_model": "Select model",
     "select_provider": "Select provider",
     "session_name_placeholder": "Session name",
+    "select_model_first": "Please select a provider and model first",
+    "stop": "Stop",
     "subtitle": "Connect to domestic AI image generation APIs",
     "title": "Text to Image"
   },

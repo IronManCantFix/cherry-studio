@@ -9,7 +9,7 @@ import type { MenuProps } from 'antd'
 import { Dropdown, Input, Select } from 'antd'
 import dayjs from 'dayjs'
 import { Download, Loader2 } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -20,6 +20,7 @@ const SessionSidebar: React.FC = () => {
   const { state, dispatch } = useImageToImage()
   const { providers } = useProviders()
   const { t } = useTranslation()
+  const listRef = useRef<HTMLDivElement>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [targetSessionId, setTargetSessionId] = useState<string | null>(null)
@@ -27,6 +28,16 @@ const SessionSidebar: React.FC = () => {
 
   const activeAssistant = state.assistants.find((a) => a.id === state.activeAssistantId)
   const activeSession = activeAssistant?.sessions.find((s) => s.id === state.activeSessionId)
+
+  const sessionCount = activeAssistant?.sessions.length ?? 0
+  const prevSessionCountRef = useRef(sessionCount)
+
+  useEffect(() => {
+    if (sessionCount > prevSessionCountRef.current && listRef.current) {
+      listRef.current.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
+    }
+    prevSessionCountRef.current = sessionCount
+  }, [sessionCount])
 
   const availableProviders = useMemo(() => providers.filter((p) => p.models && p.models.length > 0), [providers])
 
@@ -158,7 +169,7 @@ const SessionSidebar: React.FC = () => {
         <AddButton onClick={handleAddSession}>{t('chat.add.topic.title')}</AddButton>
       </Header>
 
-      <ListWrapper>
+      <ListWrapper ref={listRef}>
         {activeAssistant?.sessions.map((session) => (
           <Dropdown key={session.id} menu={{ items: getMenuItems }} trigger={['contextMenu']}>
             <SessionItem

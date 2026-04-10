@@ -47,6 +47,7 @@ const ImageGenerationArea: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [streamingImages, setStreamingImages] = useState<string[]>([])
+  const abortControllerRef = useRef<AbortController | null>(null)
   const [pendingRecord, setPendingRecord] = useState<{
     prompt: string
     inputImageUrls: string[]
@@ -134,18 +135,35 @@ const ImageGenerationArea: React.FC = () => {
 
     const sentAt = new Date().toISOString()
     setIsLoading(true)
-    setPendingRecord({ prompt: genPrompt, inputImageUrls: genFiles.map((f) => URL.createObjectURL(f)), sentAt })
+    // Convert input files to persistent base64 data URLs
+    const inputImageBase64List = await Promise.all(
+      genFiles.map(
+        (f) =>
+          new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.readAsDataURL(f)
+          })
+      )
+    )
+    setPendingRecord({ prompt: genPrompt, inputImageUrls: inputImageBase64List, sentAt })
+    // Clear input immediately after sending
+    setPrompt('')
+    setInputImages([])
     logger.info(`Generating image with provider: ${currentProvider.id}, model: ${effectiveModelId}`)
 
     const assistantPrompt = activeAssistant?.prompt || ''
     const finalPrompt = assistantPrompt ? `${assistantPrompt}\n${genPrompt}` : genPrompt
+
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
 
     try {
       const imageN = activeSession?.imageN ?? 1
       const imageSize = activeSession?.imageSize ?? '1024x1024'
       const imageResponseFormat = activeSession?.imageResponseFormat ?? 'b64_json'
 
-      const inputImageUrls = genFiles.map((f) => URL.createObjectURL(f))
+      const inputImageUrls = inputImageBase64List
       const generatedImageUrls: string[] = []
 
       if (isVolcengineImageProvider(currentProvider)) {
@@ -199,7 +217,12 @@ const ImageGenerationArea: React.FC = () => {
 
         logger.info(`Sending Volcengine streaming image request, model: ${effectiveModelId}`)
         setStreamingImages([])
-        const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) })
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          signal: abortController.signal
+        })
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
@@ -289,7 +312,7 @@ const ImageGenerationArea: React.FC = () => {
           })
         }
 
-        const response = await fetch(url, { method: 'POST', headers, body })
+        const response = await fetch(url, { method: 'POST', headers, body, signal: abortController.signal })
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
           throw new Error(errorData.error?.message || t('imagetoimage.generate_failed'))
@@ -319,8 +342,6 @@ const ImageGenerationArea: React.FC = () => {
         completedAt
       )
       dispatch({ type: 'ADD_RECORD', payload: record })
-      setPrompt('')
-      setInputImages([])
     } catch (error: unknown) {
       if (error instanceof Error && error.name !== 'AbortError') {
         logger.error('Image generation failed:', error)
@@ -330,14 +351,28 @@ const ImageGenerationArea: React.FC = () => {
       setIsLoading(false)
       setPendingRecord(null)
       setStreamingImages([])
+      abortControllerRef.current = null
     }
   }
 
   const handleGenerate = () => {
+    if (!currentProvider || !effectiveModelId) {
+      window.toast.warning(t('imagetoimage.select_model_first'))
+      return
+    }
     return doGenerate(prompt, [...inputImages])
   }
 
+  const handleStopGeneration = () => {
+    abortControllerRef.current?.abort()
+  }
+
   const handleResendRecord = async (record: (typeof records)[0]) => {
+    if (!currentProvider || !effectiveModelId) {
+      window.toast.warning(t('imagetoimage.select_model_first'))
+      return
+    }
+    if (isLoading) return
     const filePromises = record.inputImageUrls.map(async (url) => {
       const response = await fetch(url)
       const blob = await response.blob()
@@ -598,7 +633,11 @@ const ImageGenerationArea: React.FC = () => {
                 <ClearHistoryButton>{t('imagetoimage.clear_history')}</ClearHistoryButton>
               </Popconfirm>
             )}
-            <SendMessageButton sendMessage={handleGenerate} disabled={!prompt.trim() || isLoading} />
+            {isLoading ? (
+              <StopButton onClick={handleStopGeneration}>{t('imagetoimage.stop')}</StopButton>
+            ) : (
+              <SendMessageButton sendMessage={handleGenerate} disabled={!prompt.trim() || isLoading} />
+            )}
           </ToolbarRight>
         </Toolbar>
       </InputContainer>
@@ -769,7 +808,7 @@ const ThumbImg = styled.img`
 const InputImg = styled.img`
   display: block;
   max-width: 100%;
-  max-height: 400px;
+  max-height: 240px;
   object-fit: contain;
   border-radius: 8px;
   cursor: default;
@@ -779,7 +818,7 @@ const InputImg = styled.img`
 const StreamingImg = styled.img`
   display: block;
   max-width: 100%;
-  max-height: 400px;
+  max-height: 240px;
   object-fit: contain;
   border-radius: 8px;
   cursor: default;
@@ -819,7 +858,7 @@ const GalleryImage: React.FC<{ src: string }> = ({ src }) => {
 const StyledGalleryImage = styled(AntImage)`
   display: block;
   max-width: 100%;
-  max-height: 400px;
+  max-height: 240px;
   object-fit: contain;
   border-radius: 8px;
   cursor: pointer;
@@ -979,6 +1018,26 @@ const ClearHistoryButton = styled.button`
 
   &:hover {
     color: var(--color-text-1);
+  }
+`
+
+const StopButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-background-2);
+  color: var(--color-text-2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: var(--color-error);
+    color: var(--color-error);
   }
 `
 

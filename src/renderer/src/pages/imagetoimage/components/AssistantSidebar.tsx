@@ -6,7 +6,7 @@ import Scrollbar from '@renderer/components/Scrollbar'
 import type { MenuProps } from 'antd'
 import { Dropdown } from 'antd'
 import { BrushCleaning, Download, Loader2, NotebookPen } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -16,8 +16,17 @@ import { useImageToImage } from '../store/context'
 const AssistantSidebar: React.FC = () => {
   const { state, dispatch } = useImageToImage()
   const { t } = useTranslation()
+  const listRef = useRef<HTMLDivElement>(null)
+  const prevAssistantCountRef = useRef(state.assistants.length)
   const [targetAssistantId, setTargetAssistantId] = useState<string | null>(null)
   const [exportingAssistantId, setExportingAssistantId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (state.assistants.length > prevAssistantCountRef.current && listRef.current) {
+      listRef.current.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
+    }
+    prevAssistantCountRef.current = state.assistants.length
+  }, [state.assistants.length])
 
   const handleAddAssistant = useCallback(async () => {
     const assistant = await AddAssistantPopup.show()
@@ -181,7 +190,7 @@ const AssistantSidebar: React.FC = () => {
         <AddButton onClick={handleAddAssistant}>{t('chat.add.assistant.title')}</AddButton>
       </Header>
 
-      <ListWrapper>
+      <ListWrapper ref={listRef}>
         {state.assistants.map((assistant) => (
           <Dropdown key={assistant.id} menu={{ items: getMenuItems }} trigger={['contextMenu']}>
             <AssistantItem
