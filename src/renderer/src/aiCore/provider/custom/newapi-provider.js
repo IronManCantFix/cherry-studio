@@ -14,17 +14,6 @@ import { AnthropicMessagesLanguageModel } from '@ai-sdk/anthropic/internal'
 import { GoogleGenerativeAILanguageModel } from '@ai-sdk/google/internal'
 import { OpenAIResponsesLanguageModel } from '@ai-sdk/openai/internal'
 import { OpenAICompatibleChatLanguageModel, OpenAICompatibleEmbeddingModel } from '@ai-sdk/openai-compatible'
-import type {
-  EmbeddingModelV3,
-  ImageModelV3,
-  ImageModelV3CallOptions,
-  ImageModelV3ProviderMetadata,
-  ImageModelV3Usage,
-  LanguageModelV3,
-  ProviderV3,
-  SharedV3Warning
-} from '@ai-sdk/provider'
-import type { FetchFunction } from '@ai-sdk/provider-utils'
 import {
   combineHeaders,
   createJsonErrorResponseHandler,
@@ -34,7 +23,6 @@ import {
   withoutTrailingSlash
 } from '@ai-sdk/provider-utils'
 import * as z from 'zod'
-
 // NewAPI 图像生成响应 schema - 支持标准格式和 metadata 格式
 const newApiImageResponseSchema = z
   .object({
@@ -57,49 +45,18 @@ const newApiImageResponseSchema = z
       .optional()
   })
   .passthrough()
-
-export type NewApiImageResponse = z.infer<typeof newApiImageResponseSchema>
-
-export const NEWAPI_PROVIDER_NAME = 'newapi' as const
-
-export type NewApiEndpointType =
-  | 'openai'
-  | 'openai-response'
-  | 'anthropic'
-  | 'gemini'
-  | 'image-generation'
-  | 'jina-rerank'
-
-export interface NewApiProviderSettings {
-  apiKey?: string
-  baseURL?: string
-  headers?: Record<string, string>
-  fetch?: FetchFunction
-  endpointType?: NewApiEndpointType
-}
-
-export interface NewApiProvider extends ProviderV3 {
-  (modelId: string): LanguageModelV3
-  languageModel(modelId: string): LanguageModelV3
-  embeddingModel(modelId: string): EmbeddingModelV3
-  imageModel(modelId: string): ImageModelV3
-}
-
-export function createNewApi(options: NewApiProviderSettings = {}): NewApiProvider {
+export const NEWAPI_PROVIDER_NAME = 'newapi'
+export function createNewApi(options = {}) {
   const { baseURL = '', fetch: customFetch, endpointType } = options
-
   const resolveApiKey = () =>
     loadApiKey({ apiKey: options.apiKey, environmentVariableName: 'NEWAPI_API_KEY', description: 'NewAPI' })
-
-  const authHeaders = (): Record<string, string> => ({
+  const authHeaders = () => ({
     Authorization: `Bearer ${resolveApiKey()}`,
     'Content-Type': 'application/json',
     ...options.headers
   })
-
-  const url = ({ path }: { path: string; modelId: string }) => `${withoutTrailingSlash(baseURL)}${path}`
-
-  const createAnthropicModel = (modelId: string) => {
+  const url = ({ path }) => `${withoutTrailingSlash(baseURL)}${path}`
+  const createAnthropicModel = (modelId) => {
     const headers = authHeaders()
     return new AnthropicMessagesLanguageModel(modelId, {
       provider: `${NEWAPI_PROVIDER_NAME}.anthropic`,
@@ -109,8 +66,7 @@ export function createNewApi(options: NewApiProviderSettings = {}): NewApiProvid
       supportedUrls: () => ({ 'image/*': [/^https?:\/\/.*$/] })
     })
   }
-
-  const createGeminiModel = (modelId: string) => {
+  const createGeminiModel = (modelId) => {
     const headers = authHeaders()
     return new GoogleGenerativeAILanguageModel(modelId, {
       provider: `${NEWAPI_PROVIDER_NAME}.google`,
@@ -121,24 +77,21 @@ export function createNewApi(options: NewApiProviderSettings = {}): NewApiProvid
       supportedUrls: () => ({})
     })
   }
-
-  const createResponsesModel = (modelId: string) =>
+  const createResponsesModel = (modelId) =>
     new OpenAIResponsesLanguageModel(modelId, {
       provider: `${NEWAPI_PROVIDER_NAME}.openai-response`,
       url,
       headers: authHeaders,
       fetch: customFetch
     })
-
-  const createCompatibleModel = (modelId: string) =>
+  const createCompatibleModel = (modelId) =>
     new OpenAICompatibleChatLanguageModel(modelId, {
       provider: `${NEWAPI_PROVIDER_NAME}.chat`,
       url,
       headers: authHeaders,
       fetch: customFetch
     })
-
-  const createChatModel = (modelId: string): LanguageModelV3 => {
+  const createChatModel = (modelId) => {
     switch (endpointType) {
       case 'anthropic':
         return createAnthropicModel(modelId)
@@ -153,29 +106,24 @@ export function createNewApi(options: NewApiProviderSettings = {}): NewApiProvid
         return createCompatibleModel(modelId)
     }
   }
-
-  const provider = (modelId: string) => createChatModel(modelId)
-  provider.specificationVersion = 'v3' as const
-
+  const provider = (modelId) => createChatModel(modelId)
+  provider.specificationVersion = 'v3'
   provider.languageModel = createChatModel
-
-  provider.embeddingModel = (modelId: string) =>
+  provider.embeddingModel = (modelId) =>
     new OpenAICompatibleEmbeddingModel(modelId, {
       provider: `${NEWAPI_PROVIDER_NAME}.embedding`,
       url,
       headers: authHeaders,
       fetch: customFetch
     })
-
   // 自定义 ImageModel - 处理 newapi 的特殊响应格式
   // newapi 可能返回两种格式:
   // 1. 标准格式: { data: [{ b64_json: "..." }] }
   // 2. metadata 格式: { metadata: { output: { choices: [{ message: { content: [{ image: "url" }] } }] } } }
-  provider.imageModel = (modelId: string): ImageModelV3 => {
-    const imageUrl = ({ path }: { path: string; modelId: string }) => `${withoutTrailingSlash(baseURL)}${path}`
-
+  provider.imageModel = (modelId) => {
+    const imageUrl = ({ path }) => `${withoutTrailingSlash(baseURL)}${path}`
     // 下载图片并转换为 base64
-    const downloadImageAsBase64 = async (imageUrl: string): Promise<string> => {
+    const downloadImageAsBase64 = async (imageUrl) => {
       const response = await (customFetch || fetch)(imageUrl)
       if (!response.ok) {
         throw new Error(`Failed to download image: ${response.status} ${response.statusText}`)
@@ -184,22 +132,13 @@ export function createNewApi(options: NewApiProviderSettings = {}): NewApiProvid
       const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
       return base64
     }
-
     return {
       specificationVersion: 'v3',
       provider: `${NEWAPI_PROVIDER_NAME}.image`,
       modelId,
       maxImagesPerCall: 10,
-
-      async doGenerate(options: ImageModelV3CallOptions): Promise<{
-        images: string[]
-        warnings: SharedV3Warning[]
-        usage?: ImageModelV3Usage
-        providerMetadata?: ImageModelV3ProviderMetadata
-        response: { timestamp: Date; modelId: string; headers: Record<string, string> }
-      }> {
+      async doGenerate(options) {
         const { prompt, n = 1, size, abortSignal } = options
-
         const result = await postJsonToApi({
           url: imageUrl({ path: '/images/generations', modelId }),
           headers: combineHeaders(authHeaders(), options.headers),
@@ -218,12 +157,9 @@ export function createNewApi(options: NewApiProviderSettings = {}): NewApiProvid
           abortSignal,
           fetch: customFetch
         })
-
         const response = result.value
-
         // 解析图片 URL - metadata.output.choices 和 data 包含相同图片，只取其中一个
-        const images: string[] = []
-
+        const images = []
         // 优先使用 metadata.output 格式（newapi/阿里云/万相格式）
         // 万相每个 choice 包含一张图，需要遍历所有 choices
         const metadata = response.metadata
@@ -260,7 +196,6 @@ export function createNewApi(options: NewApiProviderSettings = {}): NewApiProvid
             }
           }
         }
-
         return {
           images,
           warnings: [],
@@ -273,6 +208,5 @@ export function createNewApi(options: NewApiProviderSettings = {}): NewApiProvid
       }
     }
   }
-
-  return provider as NewApiProvider
+  return provider
 }
