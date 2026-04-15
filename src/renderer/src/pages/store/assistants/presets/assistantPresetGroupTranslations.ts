@@ -29,6 +29,19 @@ export const groupTranslations: GroupTranslations = {
     'pt-PT': 'Meus Agentes',
     'ro-RO': 'Mă'
   },
+  电商: {
+    'el-GR': 'Ηλεκτρονικό Εμπόριο',
+    'de-DE': 'E-Commerce',
+    'en-US': 'E-commerce',
+    'es-ES': 'Comercio Electrónico',
+    'fr-FR': 'Commerce Électronique',
+    'zh-CN': '电商',
+    'zh-TW': '電商',
+    'ru-RU': 'Электронная коммерция',
+    'ja-JP': 'EC',
+    'pt-PT': 'E-commerce',
+    'ro-RO': 'E-commerce'
+  },
   职业: {
     'el-GR': 'Επαγγελμα',
     'de-DE': 'Karriere',
