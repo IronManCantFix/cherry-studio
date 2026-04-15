@@ -8,9 +8,7 @@ import {
   CalendarClock,
   Cloud,
   Command,
-  FileCode,
   HardDrive,
-  Info,
   MonitorCog,
   Package,
   PictureInPicture2,
@@ -132,12 +130,13 @@ const SettingsPage: FC = () => {
               {t('settings.scheduledTasks.title')}
             </MenuItem>
           </MenuItemLink>
-          <MenuItemLink to="/settings/docprocess">
+          {/* [dev1.0] 隐藏文档处理入口 */}
+          {/* <MenuItemLink to="/settings/docprocess">
             <MenuItem className={isRoute('/settings/docprocess')}>
               <FileCode size={18} />
               {t('settings.tool.preprocess.title')}
             </MenuItem>
-          </MenuItemLink>
+          </MenuItemLink> */}
           <MenuItemLink to="/settings/quickphrase">
             <MenuItem className={isRoute('/settings/quickphrase')}>
               <Zap size={18} />
@@ -164,12 +163,13 @@ const SettingsPage: FC = () => {
             </MenuItem>
           </MenuItemLink>
           <Divider />
-          <MenuItemLink to="/settings/about">
+          {/* [dev1.0] 隐藏关于我们入口 */}
+          {/* <MenuItemLink to="/settings/about">
             <MenuItem className={isRoute('/settings/about')}>
               <Info size={18} />
               {t('settings.about.label')}
             </MenuItem>
-          </MenuItemLink>
+          </MenuItemLink> */}
         </SettingMenus>
         <SettingContent>
           <Routes>

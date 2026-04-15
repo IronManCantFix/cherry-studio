@@ -15,7 +15,7 @@ import { runAsyncFunction } from '@renderer/utils'
 import { UpgradeChannel } from '@shared/config/constant'
 import { Avatar, Button, Progress, Radio, Row, Switch, Tag, Tooltip } from 'antd'
 import { debounce } from 'lodash'
-import { Briefcase, Bug, Building2, Github, Globe, Mail, Rss } from 'lucide-react'
+import { Briefcase, Building2, Github, Globe, Mail, Rss } from 'lucide-react'
 import { BadgeQuestionMark } from 'lucide-react'
 import type { FC } from 'react'
 import { useEffect, useState } from 'react'
@@ -76,9 +76,7 @@ const AboutSettings: FC = () => {
     onOpenWebsite(url)
   }
 
-  const debug = async () => {
-    await window.api.devTools.toggle()
-  }
+  // [dev1.0] debug 函数已移至 GeneralSettings
 
   const showEnterprise = async () => {
     onOpenWebsite('https://enterprise.cherry-ai.com')
@@ -337,14 +335,7 @@ const AboutSettings: FC = () => {
             {t('settings.about.careers.button')}
           </Button>
         </SettingRow>
-        <SettingDivider />
-        <SettingRow>
-          <SettingRowTitle>
-            <Bug size={18} />
-            {t('settings.about.debug.title')}
-          </SettingRowTitle>
-          <Button onClick={debug}>{t('settings.about.debug.open')}</Button>
-        </SettingRow>
+        {/* [dev1.0] 调试面板已移至常规设置 > 开发者模式 */}
       </SettingGroup>
     </SettingContainer>
   )

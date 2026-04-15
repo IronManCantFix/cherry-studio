@@ -3,6 +3,13 @@ packages:
 
 supportedArchitectures:
   os:
-  - current
+    - current
+    - darwin
+    - linux
+    - win32
+    - windows
   cpu:
-  - current
+    - current
+    - x64
+    - arm64
+    - ia32

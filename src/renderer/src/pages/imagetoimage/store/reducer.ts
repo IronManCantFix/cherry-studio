@@ -70,7 +70,7 @@ export function createSession(name: string): ImageToImageSession {
     modelId: '',
     negativePrompt: '',
     imageN: 1,
-    imageSize: '1024x1024',
+    imageSize: '2048x2048',
     imageQuality: 'auto',
     imageResponseFormat: 'b64_json',
     createdAt: now,

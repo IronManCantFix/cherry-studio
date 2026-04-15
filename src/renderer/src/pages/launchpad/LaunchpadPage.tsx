@@ -1,9 +1,8 @@
-import { OpenClawIcon } from '@renderer/components/Icons/SVGIcon'
 import App from '@renderer/components/MinApp/MinApp'
 import { useMinapps } from '@renderer/hooks/useMinapps'
 import { useRuntime } from '@renderer/hooks/useRuntime'
 import { useSettings } from '@renderer/hooks/useSettings'
-import { Code, FileSearch, Folder, ImagePlus, Languages, LayoutGrid, NotepadText, Palette, Sparkle } from 'lucide-react'
+import { FileSearch, Folder, ImagePlus, Languages, LayoutGrid, NotepadText, Palette, Sparkle } from 'lucide-react'
 import type { FC } from 'react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -60,6 +59,7 @@ const LaunchpadPage: FC = () => {
       path: '/files',
       bgColor: 'linear-gradient(135deg, #F59E0B, #FBBF24)' // 文件：金色，代表资源和重要性
     },
+    /* [dev1.0] 隐藏 Code 入口
     {
       icon: <Code size={32} className="icon" />,
       text: t('title.code'),
@@ -72,6 +72,7 @@ const LaunchpadPage: FC = () => {
       path: '/openclaw',
       bgColor: 'linear-gradient(135deg, #EF4444, #B91C1C)' // OpenClaw：红色渐变，代表龙虾的颜色
     },
+    */
     {
       icon: <NotepadText size={32} className="icon" />,
       text: t('title.notes'),

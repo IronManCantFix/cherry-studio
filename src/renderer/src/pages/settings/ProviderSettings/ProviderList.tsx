@@ -53,7 +53,10 @@ const ProviderList: FC<ProviderListProps> = ({ isOnboarding = false }) => {
   const providers = useAllProviders()
   const { updateProviders, addProvider, removeProvider, updateProvider } = useProviders()
   const { setTimeoutTimer } = useTimer()
-  const [selectedProvider, _setSelectedProvider] = useState<Provider>(providers[0])
+  // [dev1.0] 初始选中第一个非 cherryin 的提供商，避免闪烁
+  const [selectedProvider, _setSelectedProvider] = useState<Provider>(
+    () => providers.find((p) => p.id !== 'cherryin') ?? providers[0]
+  )
   const { t } = useTranslation()
   const [searchText, setSearchText] = useState<string>('')
   const [dragging, setDragging] = useState(false)
@@ -309,6 +312,11 @@ const ProviderList: FC<ProviderListProps> = ({ isOnboarding = false }) => {
   }
 
   const filteredProviders = providers.filter((provider) => {
+    // [dev1.0] 隐藏 CherryIN 提供商
+    if (provider.id === 'cherryin') {
+      return false
+    }
+
     // don't show it when isOvmsSupported is loading
     if (provider.id === 'ovms' && !isOvmsSupported) {
       return false
@@ -324,6 +332,13 @@ const ProviderList: FC<ProviderListProps> = ({ isOnboarding = false }) => {
     const isModelMatch = provider.models.some((model) => matchKeywordsInModel(keywords, model))
     return isProviderMatch || isModelMatch
   })
+
+  // [dev1.0] 当选中的 provider 被过滤掉时，自动切换到可见列表的第一项
+  useEffect(() => {
+    if (filteredProviders.length > 0 && !filteredProviders.some((p) => p.id === selectedProvider.id)) {
+      setSelectedProvider(filteredProviders[0])
+    }
+  }, [filteredProviders, selectedProvider.id, setSelectedProvider])
 
   const { onDragEnd: handleReorder, itemKey } = useDraggableReorder({
     originalList: providers,

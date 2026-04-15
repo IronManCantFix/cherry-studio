@@ -161,8 +161,9 @@ export class ConfigManager {
     this.setAndNotify(ConfigKeys.EnableQuickAssistant, value)
   }
 
+  // [dev1.0] 默认禁止自动更新
   getAutoUpdate(): boolean {
-    return this.get<boolean>(ConfigKeys.AutoUpdate, true)
+    return this.get<boolean>(ConfigKeys.AutoUpdate, false)
   }
 
   setAutoUpdate(value: boolean) {

@@ -24,7 +24,7 @@ import type { NotificationSource } from '@renderer/types/notification'
 import { isValidProxyUrl } from '@renderer/utils'
 import { formatErrorMessage } from '@renderer/utils/error'
 import { defaultByPassRules, defaultLanguage } from '@shared/config/constant'
-import { Flex, Input, Switch, Tooltip } from 'antd'
+import { Button, Flex, Input, Switch, Tooltip } from 'antd'
 import type { FC } from 'react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -363,6 +363,17 @@ const GeneralSettings: FC = () => {
             <InfoTooltip title={t('settings.developer.help')} />
           </Flex>
           <Switch checked={enableDeveloperMode} onChange={setEnableDeveloperMode} />
+        </SettingRow>
+        {/* [dev1.0] 调试面板按钮从关于页移至此处 */}
+        <SettingDivider />
+        <SettingRow>
+          <SettingRowTitle>{t('settings.about.debug.title')}</SettingRowTitle>
+          <Button
+            onClick={async () => {
+              await window.api.devTools.toggle()
+            }}>
+            {t('settings.about.debug.open')}
+          </Button>
         </SettingRow>
       </SettingGroup>
     </SettingContainer>

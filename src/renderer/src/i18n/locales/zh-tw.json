@@ -1993,7 +1993,10 @@
     "session_name_placeholder": "會話名稱",
     "stop": "停止生成",
     "subtitle": "對接國內 AI 圖生圖介面",
-    "title": "圖生圖"
+    "title": "圖生圖",
+    "defaultAssistantPrompt": "",
+    "defaultAssistantName": "默認助手",
+    "defaultTopicName": "默認話題"
   },
   "import": {
     "chatgpt": {

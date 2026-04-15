@@ -37,12 +37,30 @@ const AssistantPresetsPage: FC = () => {
 
   useEffect(() => {
     const systemAgentsGroupList = groupByCategories(systemPresets)
-    const agentsGroupList = {
-      我的: userPresets,
-      精选: [],
-      ...systemAgentsGroupList
-    } as Record<string, AssistantPreset[]>
-    setAgentGroups(agentsGroupList)
+
+    // 按照 groupTranslations 中定义的顺序排列分类
+    // groupTranslations 的 key 顺序就是期望的显示顺序
+    const orderedGroups: Record<string, AssistantPreset[]> = {}
+
+    // 首先添加"我的"和"精选"
+    orderedGroups['我的'] = userPresets
+    orderedGroups['精选'] = []
+
+    // 然后按照 groupTranslations 的顺序添加其他分类
+    Object.keys(groupTranslations).forEach((group) => {
+      if (group !== '我的' && group !== '精选' && systemAgentsGroupList[group]) {
+        orderedGroups[group] = systemAgentsGroupList[group]
+      }
+    })
+
+    // 添加 groupTranslations 中未定义的其他分类
+    Object.keys(systemAgentsGroupList).forEach((group) => {
+      if (!orderedGroups[group]) {
+        orderedGroups[group] = systemAgentsGroupList[group]
+      }
+    })
+
+    setAgentGroups(orderedGroups)
   }, [systemPresets, userPresets])
 
   const filteredPresets = useMemo(() => {

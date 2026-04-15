@@ -1993,7 +1993,10 @@
     "session_name_placeholder": "Session name",
     "stop": "Stop",
     "subtitle": "Connect to domestic AI image generation APIs",
-    "title": "Text to Image"
+    "title": "Text to Image",
+    "defaultAssistantPrompt": "",
+    "defaultAssistantName": "Default Assistant",
+    "defaultTopicName": "Default Topic"
   },
   "import": {
     "chatgpt": {
