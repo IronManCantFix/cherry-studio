@@ -5919,7 +5919,33 @@
     "paintings": "Paintings",
     "settings": "Settings",
     "store": "Assistant Library",
-    "translate": "Translate"
+    "translate": "Translate",
+    "video": "Video Generation"
+  },
+  "videoService": {
+    "title": "Video Service",
+    "description": "Configure video service download and startup",
+    "fields": {
+      "windowsUrl": "Windows Download URL",
+      "macUrl": "Mac Download URL",
+      "port": "Service Port"
+    },
+    "actions": {
+      "download": "Download",
+      "start": "Start",
+      "stop": "Stop"
+    },
+    "messages": {
+      "downloadSuccess": "Download successful",
+      "downloadFailed": "Download failed",
+      "startSuccess": "Start successful",
+      "startFailed": "Start failed",
+      "stopSuccess": "Stop successful",
+      "stopFailed": "Stop failed"
+    },
+    "status": {
+      "notRunning": "Service not running"
+    }
   },
   "trace": {
     "backList": "Back To List",

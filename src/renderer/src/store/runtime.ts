@@ -78,6 +78,8 @@ export interface RuntimeState {
   // Migrated from useApiServer, it's global state now
   /** Is the api server running */
   apiServerRunning: boolean
+  /** Is the video service running */
+  videoServiceRunning: boolean
 }
 
 export interface ExportState {
@@ -122,7 +124,8 @@ const initialState: RuntimeState = {
   },
   detectedRegion: null,
   loadingMap: {},
-  apiServerRunning: false
+  apiServerRunning: false,
+  videoServiceRunning: false
 }
 
 const runtimeSlice = createSlice({

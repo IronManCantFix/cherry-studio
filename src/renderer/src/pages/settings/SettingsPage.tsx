@@ -18,6 +18,7 @@ import {
   Settings2,
   Sparkles,
   TextCursorInput,
+  Video,
   Zap
 } from 'lucide-react'
 import type { FC } from 'react'
@@ -41,6 +42,7 @@ import ShortcutSettings from './ShortcutSettings'
 import SkillsSettings from './SkillsSettings'
 import TasksSettings from './TasksSettings'
 import { ApiServerSettings } from './ToolSettings/ApiServerSettings'
+import { VideoServiceSettings } from './ToolSettings/VideoServiceSettings'
 import WebSearchSettings from './WebSearchSettings'
 
 const SettingsPage: FC = () => {
@@ -118,6 +120,12 @@ const SettingsPage: FC = () => {
               {t('apiServer.title')}
             </MenuItem>
           </MenuItemLink>
+          <MenuItemLink to="/settings/video-service">
+            <MenuItem className={isRoute('/settings/video-service')}>
+              <Video size={18} />
+              {t('videoService.title')}
+            </MenuItem>
+          </MenuItemLink>
           <MenuItemLink to="/settings/channels">
             <MenuItem className={isRoute('/settings/channels')}>
               <Radio size={18} />
@@ -177,6 +185,7 @@ const SettingsPage: FC = () => {
             <Route path="model" element={<ModelSettings />} />
             <Route path="websearch/*" element={<WebSearchSettings />} />
             <Route path="api-server" element={<ApiServerSettings />} />
+            <Route path="video-service" element={<VideoServiceSettings />} />
             <Route path="channels" element={<ChannelsSettings />} />
             <Route path="scheduled-tasks" element={<TasksSettings />} />
             <Route path="docprocess" element={<DocProcessSettings />} />

@@ -5919,7 +5919,33 @@
     "paintings": "绘画",
     "settings": "设置",
     "store": "助手库",
-    "translate": "翻译"
+    "translate": "翻译",
+    "video": "视频生成"
+  },
+  "videoService": {
+    "title": "视频生成服务",
+    "description": "配置视频生成服务的下载和启动",
+    "fields": {
+      "windowsUrl": "Windows下载地址",
+      "macUrl": "Mac下载地址",
+      "port": "服务端口"
+    },
+    "actions": {
+      "download": "下载服务",
+      "start": "启动服务",
+      "stop": "停止服务"
+    },
+    "messages": {
+      "downloadSuccess": "下载成功",
+      "downloadFailed": "下载失败",
+      "startSuccess": "启动成功",
+      "startFailed": "启动失败",
+      "stopSuccess": "停止成功",
+      "stopFailed": "停止失败"
+    },
+    "status": {
+      "notRunning": "服务未运行"
+    }
   },
   "trace": {
     "backList": "返回列表",

@@ -451,6 +451,12 @@ export enum IpcChannel {
   OpenClaw_CheckUpdate = 'openclaw:check-update',
   OpenClaw_PerformUpdate = 'openclaw:perform-update',
 
+  // Video Service
+  VideoService_GetStatus = 'video-service:get-status',
+  VideoService_Start = 'video-service:start',
+  VideoService_Stop = 'video-service:stop',
+  VideoService_Download = 'video-service:download',
+
   // Analytics
   Analytics_TrackTokenUsage = 'analytics:track-token-usage'
 }

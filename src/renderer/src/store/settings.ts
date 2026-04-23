@@ -248,6 +248,14 @@ export interface SettingsState {
   // API Server
   apiServer: ApiServerConfig
   showMessageOutline: boolean
+  videoService: VideoServiceConfig
+}
+
+export interface VideoServiceConfig {
+  enabled: boolean
+  windowsUrl: string
+  macUrl: string
+  port: number
 }
 
 export type MultiModelMessageStyle = 'horizontal' | 'vertical' | 'fold' | 'grid'
@@ -449,7 +457,13 @@ export const initialState: SettingsState = {
     port: API_SERVER_DEFAULTS.PORT,
     apiKey: `cs-sk-${uuid()}`
   },
-  showMessageOutline: false
+  showMessageOutline: false,
+  videoService: {
+    enabled: false,
+    windowsUrl: 'https://cdn.example.com/video-service/win/video-service.zip',
+    macUrl: 'https://cdn.example.com/video-service/mac/video-service.zip',
+    port: 7890
+  }
 }
 
 const settingsSlice = createSlice({
@@ -899,6 +913,31 @@ const settingsSlice = createSlice({
     },
     setShowMessageOutline: (state, action: PayloadAction<boolean>) => {
       state.showMessageOutline = action.payload
+    },
+    // Video Service actions
+    setVideoServiceEnabled: (state, action: PayloadAction<boolean>) => {
+      state.videoService = {
+        ...state.videoService,
+        enabled: action.payload
+      }
+    },
+    setVideoServicePort: (state, action: PayloadAction<number>) => {
+      state.videoService = {
+        ...state.videoService,
+        port: action.payload
+      }
+    },
+    setVideoServiceWindowsUrl: (state, action: PayloadAction<string>) => {
+      state.videoService = {
+        ...state.videoService,
+        windowsUrl: action.payload
+      }
+    },
+    setVideoServiceMacUrl: (state, action: PayloadAction<string>) => {
+      state.videoService = {
+        ...state.videoService,
+        macUrl: action.payload
+      }
     }
   }
 })
@@ -1033,7 +1072,12 @@ export const {
   // API Server actions
   setApiServerEnabled,
   setApiServerPort,
-  setApiServerApiKey
+  setApiServerApiKey,
+  // Video Service actions
+  setVideoServiceEnabled,
+  setVideoServicePort,
+  setVideoServiceWindowsUrl,
+  setVideoServiceMacUrl
 } = settingsSlice.actions
 
 export default settingsSlice.reducer

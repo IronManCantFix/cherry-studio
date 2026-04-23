@@ -88,6 +88,26 @@ type DirectoryListOptions = {
   searchPattern?: string
 }
 
+interface StartVideoServiceResult {
+  success: boolean
+  error?: string
+}
+
+interface StopVideoServiceResult {
+  success: boolean
+  error?: string
+}
+
+interface GetVideoServiceStatusResult {
+  running: boolean
+  installed: boolean
+}
+
+interface DownloadVideoServiceResult {
+  success: boolean
+  error?: string
+}
+
 export function tracedInvoke(channel: string, spanContext: SpanContext | undefined, ...args: any[]) {
   if (spanContext) {
     const data = { type: 'trace', context: spanContext }
@@ -766,6 +786,13 @@ const api = {
         ipcRenderer.removeListener(IpcChannel.ApiServer_Ready, listener)
       }
     }
+  },
+  videoService: {
+    getStatus: (): Promise<GetVideoServiceStatusResult> => ipcRenderer.invoke(IpcChannel.VideoService_GetStatus),
+    start: (port: number): Promise<StartVideoServiceResult> => ipcRenderer.invoke(IpcChannel.VideoService_Start, port),
+    stop: (): Promise<StopVideoServiceResult> => ipcRenderer.invoke(IpcChannel.VideoService_Stop),
+    download: (url: string): Promise<DownloadVideoServiceResult> =>
+      ipcRenderer.invoke(IpcChannel.VideoService_Download, url)
   },
   skill: {
     list: (): Promise<SkillResult<InstalledSkill[]>> => ipcRenderer.invoke(IpcChannel.Skill_List),

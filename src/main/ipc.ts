@@ -90,6 +90,7 @@ import {
 import storeSyncService from './services/StoreSyncService'
 import { themeService } from './services/ThemeService'
 import VertexAIService from './services/VertexAIService'
+import { registerVideoServiceHandlers } from './services/VideoService'
 import { setOpenLinkExternal } from './services/WebviewService'
 import { windowService } from './services/WindowService'
 import { calculateDirectorySize, getDataPath, getResourcePath } from './utils'
@@ -981,6 +982,9 @@ export async function registerIpc(mainWindow: BrowserWindow, app: Electron.App) 
   })
   // API Server
   apiServerService.registerIpcHandlers()
+
+  // Video Service
+  registerVideoServiceHandlers()
 
   // Anthropic OAuth
   ipcMain.handle(IpcChannel.Anthropic_StartOAuthFlow, () => anthropicService.startOAuthFlow())

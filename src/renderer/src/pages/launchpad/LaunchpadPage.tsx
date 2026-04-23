@@ -2,7 +2,17 @@ import App from '@renderer/components/MinApp/MinApp'
 import { useMinapps } from '@renderer/hooks/useMinapps'
 import { useRuntime } from '@renderer/hooks/useRuntime'
 import { useSettings } from '@renderer/hooks/useSettings'
-import { FileSearch, Folder, ImagePlus, Languages, LayoutGrid, NotepadText, Palette, Sparkle } from 'lucide-react'
+import {
+  FileSearch,
+  Folder,
+  ImagePlus,
+  Languages,
+  LayoutGrid,
+  NotepadText,
+  Palette,
+  Sparkle,
+  Video
+} from 'lucide-react'
 import type { FC } from 'react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -52,6 +62,12 @@ const LaunchpadPage: FC = () => {
       text: t('title.translate'),
       path: '/translate',
       bgColor: 'linear-gradient(135deg, #06B6D4, #0EA5E9)' // 翻译：明亮的青蓝色，代表沟通和流畅
+    },
+    {
+      icon: <Video size={32} className="icon" />,
+      text: t('title.video'),
+      path: '/video',
+      bgColor: 'linear-gradient(135deg, #EF4444, #F97316)'
     },
     {
       icon: <Folder size={32} className="icon" />,
