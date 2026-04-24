@@ -3,8 +3,8 @@ import { useVideoService } from '@renderer/hooks/useVideoService'
 import type { RootState } from '@renderer/store'
 import { useAppDispatch, useAppSelector } from '@renderer/store'
 import { setVideoServiceMacUrl, setVideoServicePort, setVideoServiceWindowsUrl } from '@renderer/store/settings'
-import { Button, Input, InputNumber, Typography } from 'antd'
-import { Download, Play, Square } from 'lucide-react'
+import { Button, Input, InputNumber, Progress, Typography } from 'antd'
+import { Download, FolderOpen, Play, RefreshCw, Square } from 'lucide-react'
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -15,8 +15,8 @@ const { Title, Text } = Typography
 
 const defaultVideoServiceConfig = {
   enabled: false,
-  windowsUrl: 'https://cdn.example.com/video-service/win/video-service.zip',
-  macUrl: 'https://cdn.example.com/video-service/mac/video-service.zip',
+  windowsUrl: 'https://huangjia.pw:8888/s/6a5f592a85d7406887',
+  macUrl: 'https://huangjia.pw:8888/s/6a5f592a85d7406887',
   port: 7890
 }
 
@@ -26,7 +26,17 @@ const VideoServiceSettings: FC = () => {
   const { t } = useTranslation()
   const videoServiceConfig =
     useAppSelector((state: RootState) => state.settings.videoService) || defaultVideoServiceConfig
-  const { videoServiceRunning, loading, installed, startService, stopService, downloadService } = useVideoService()
+  const {
+    videoServiceRunning,
+    loading,
+    installed,
+    downloadProgress,
+    startService,
+    stopService,
+    downloadService,
+    updateService,
+    openFolder
+  } = useVideoService()
 
   const handleDownload = async () => {
     if (!videoServiceConfig.windowsUrl && !videoServiceConfig.macUrl) {
@@ -59,6 +69,23 @@ const VideoServiceSettings: FC = () => {
     }
   }
 
+  const handleUpdate = async () => {
+    if (!videoServiceConfig.windowsUrl && !videoServiceConfig.macUrl) {
+      window.toast.error(t('videoService.messages.noDownloadUrl'))
+      return
+    }
+    const success = await updateService()
+    if (success) {
+      window.toast.success(t('videoService.messages.updateSuccess'))
+    } else {
+      window.toast.error(t('videoService.messages.updateFailed'))
+    }
+  }
+
+  const handleOpenFolder = () => {
+    openFolder()
+  }
+
   return (
     <Container theme={theme}>
       <HeaderSection>
@@ -76,14 +103,12 @@ const VideoServiceSettings: FC = () => {
         <StyledInput
           value={videoServiceConfig.windowsUrl}
           onChange={(e) => dispatch(setVideoServiceWindowsUrl(e.target.value))}
-          placeholder={t('videoService.fields.windowsUrl.placeholder')}
         />
 
         <FieldLabel>{t('videoService.fields.macUrl')}</FieldLabel>
         <StyledInput
           value={videoServiceConfig.macUrl}
           onChange={(e) => dispatch(setVideoServiceMacUrl(e.target.value))}
-          placeholder={t('videoService.fields.macUrl.placeholder')}
         />
 
         <FieldLabel>{t('videoService.fields.port')}</FieldLabel>
@@ -97,18 +122,45 @@ const VideoServiceSettings: FC = () => {
 
       {/* Control Section */}
       <ControlSection>
+        {loading && downloadProgress.percent > 0 && (
+          <ProgressWrapper>
+            <Progress
+              percent={downloadProgress.percent}
+              status={downloadProgress.percent < 100 ? 'active' : 'success'}
+              size="small"
+            />
+            <StatusText type="secondary">
+              {downloadProgress.status === 'downloading' && t('videoService.status.downloading')}
+              {downloadProgress.status === 'extracting' && t('videoService.status.extracting')}
+              {downloadProgress.status === 'cleaning' && t('videoService.status.cleaning')}
+              {downloadProgress.status === 'done' && t('videoService.status.done')}
+            </StatusText>
+          </ProgressWrapper>
+        )}
         {!installed ? (
           <Button icon={<Download size={14} />} onClick={handleDownload} loading={loading}>
             {t('videoService.actions.download')}
           </Button>
-        ) : videoServiceRunning ? (
-          <Button icon={<Square size={14} />} onClick={handleStop} loading={loading} danger>
-            {t('videoService.actions.stop')}
-          </Button>
         ) : (
-          <Button icon={<Play size={14} />} onClick={handleStart} loading={loading}>
-            {t('videoService.actions.start')}
-          </Button>
+          <>
+            <ButtonRow>
+              {videoServiceRunning ? (
+                <Button icon={<Square size={14} />} onClick={handleStop} loading={loading} danger>
+                  {t('videoService.actions.stop')}
+                </Button>
+              ) : (
+                <Button icon={<Play size={14} />} onClick={handleStart} loading={loading} type="primary">
+                  {t('videoService.actions.start')}
+                </Button>
+              )}
+              <Button icon={<RefreshCw size={14} />} onClick={handleUpdate} loading={loading}>
+                {t('videoService.actions.update')}
+              </Button>
+              <Button icon={<FolderOpen size={14} />} onClick={handleOpenFolder}>
+                {t('videoService.actions.openFolder')}
+              </Button>
+            </ButtonRow>
+          </>
         )}
       </ControlSection>
     </Container>
@@ -166,7 +218,21 @@ const StyledInputNumber = styled(InputNumber)`
 
 const ControlSection = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 12px;
+`
+
+const ButtonRow = styled.div`
+  display: flex;
+  gap: 12px;
+`
+
+const ProgressWrapper = styled.div`
+  width: 100%;
+`
+
+const StatusText = styled(Text)`
+  font-size: 12px;
 `
 
 export default VideoServiceSettings

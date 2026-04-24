@@ -3,7 +3,7 @@ import AdmZip from 'adm-zip'
 import type { ChildProcess } from 'child_process'
 import { spawn } from 'child_process'
 import type { IpcMainInvokeEvent } from 'electron'
-import { ipcMain, net } from 'electron'
+import { BrowserWindow, ipcMain, net, shell } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -23,7 +23,7 @@ export class VideoService {
   }
 
   async checkInstalled(): Promise<boolean> {
-    const execName = process.platform === 'win32' ? 'video-service.exe' : 'video-service'
+    const execName = process.platform === 'win32' ? 'start.bat' : 'video-service'
     const execPath = path.join(this.serviceDir, execName)
     return fs.existsSync(execPath)
   }
@@ -94,9 +94,17 @@ export class VideoService {
     }
   }
 
+  private sendProgress(percent: number, status: string) {
+    const windows = BrowserWindow.getAllWindows()
+    for (const win of windows) {
+      win.webContents.send(IpcChannel.VideoService_DownloadProgress, { percent, status })
+    }
+  }
+
   async download(url: string): Promise<{ success: boolean; error?: string }> {
     try {
       logger.info(`Downloading video service from ${url}`)
+      this.sendProgress(0, 'downloading')
 
       if (!fs.existsSync(this.serviceDir)) {
         fs.mkdirSync(this.serviceDir, { recursive: true })
@@ -104,29 +112,54 @@ export class VideoService {
 
       const zipPath = path.join(this.serviceDir, 'video-service.zip')
 
-      // Download
+      // Download with progress
       const response = await net.fetch(url)
       if (!response.ok) {
         return { success: false, error: `Download failed: HTTP ${response.status}` }
       }
 
-      const arrayBuffer = await response.arrayBuffer()
-      fs.writeFileSync(zipPath, Buffer.from(arrayBuffer))
+      const totalBytes = Number(response.headers.get('content-length') || 0)
+      const chunks: Buffer[] = []
+      let receivedBytes = 0
+
+      if (response.body) {
+        const reader = response.body.getReader()
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          chunks.push(Buffer.from(value))
+          receivedBytes += value.length
+          if (totalBytes > 0) {
+            const percent = Math.round((receivedBytes / totalBytes) * 80)
+            this.sendProgress(percent, 'downloading')
+          }
+        }
+      }
+
+      const buffer = Buffer.concat(chunks)
+      fs.writeFileSync(zipPath, buffer)
       logger.info(`Downloaded to ${zipPath}`)
+      this.sendProgress(80, 'extracting')
 
       // Extract
       const zip = new AdmZip(zipPath)
       zip.extractAllTo(this.serviceDir, true)
       logger.info(`Extracted to ${this.serviceDir}`)
+      this.sendProgress(95, 'cleaning')
 
       // Cleanup zip
       fs.unlinkSync(zipPath)
+      this.sendProgress(100, 'done')
 
       return { success: true }
     } catch (error: any) {
       logger.error('Failed to download video service:', error)
       return { success: false, error: error.message }
     }
+  }
+
+  async openFolder(): Promise<void> {
+    await shell.openPath(this.serviceDir)
   }
 }
 
@@ -157,5 +190,9 @@ export const registerVideoServiceHandlers = () => {
 
   ipcMain.handle(IpcChannel.VideoService_Download, async (_event: IpcMainInvokeEvent, url: string) => {
     return await service.download(url)
+  })
+
+  ipcMain.handle(IpcChannel.VideoService_OpenFolder, async () => {
+    await service.openFolder()
   })
 }

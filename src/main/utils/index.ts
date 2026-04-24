@@ -50,7 +50,7 @@ export function getDataPath(subPath?: string) {
 }
 
 export function getPluginsPath(subPath?: string) {
-  const pluginsPath = path.join(app.getPath('userData'), '.cherrystudio', 'plugins')
+  const pluginsPath = path.join(app.getPath('userData'), 'plugins')
 
   if (!fs.existsSync(pluginsPath)) {
     fs.mkdirSync(pluginsPath, { recursive: true })

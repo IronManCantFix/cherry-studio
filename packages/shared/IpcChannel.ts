@@ -456,6 +456,8 @@ export enum IpcChannel {
   VideoService_Start = 'video-service:start',
   VideoService_Stop = 'video-service:stop',
   VideoService_Download = 'video-service:download',
+  VideoService_DownloadProgress = 'video-service:download-progress',
+  VideoService_OpenFolder = 'video-service:open-folder',
 
   // Analytics
   Analytics_TrackTokenUsage = 'analytics:track-token-usage'

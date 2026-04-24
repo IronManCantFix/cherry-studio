@@ -6086,13 +6086,15 @@
   "videoService": {
     "actions": {
       "download": "下载服务",
+      "openFolder": "打开插件目录",
       "start": "启动服务",
-      "stop": "停止服务"
+      "stop": "停止服务",
+      "update": "更新服务"
     },
-    "description": "配置视频生成服务的下载和启动",
+    "description": "配置视频服务的下载和启动",
     "download": {
-      "content": "需要先下载视频生成服务才能使用此功能，是否前往设置页面下载？",
-      "title": "视频生成服务未安装"
+      "content": "需要先下载视频服务才能使用此功能，是否前往设置页面下载？",
+      "title": "视频服务未安装"
     },
     "fields": {
       "macUrl": "Mac下载地址",
@@ -6106,12 +6108,18 @@
       "startFailed": "启动失败",
       "startSuccess": "启动成功",
       "stopFailed": "停止失败",
-      "stopSuccess": "停止成功"
+      "stopSuccess": "停止成功",
+      "updateFailed": "更新失败",
+      "updateSuccess": "更新成功"
     },
     "status": {
+      "cleaning": "清理临时文件...",
+      "done": "完成",
+      "downloading": "下载中...",
+      "extracting": "解压中...",
       "notRunning": "服务未运行"
     },
-    "title": "视频生成服务"
+    "title": "视频服务"
   },
   "warning": {
     "missing_provider": "供应商不存在，已回退到默认供应商 {{provider}}。这可能导致问题。"

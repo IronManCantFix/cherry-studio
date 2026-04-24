@@ -6086,8 +6086,10 @@
   "videoService": {
     "actions": {
       "download": "Download",
+      "openFolder": "Open Plugin Folder",
       "start": "Start",
-      "stop": "Stop"
+      "stop": "Stop",
+      "update": "Update"
     },
     "description": "Configure video service download and startup",
     "download": {
@@ -6106,9 +6108,15 @@
       "startFailed": "Start failed",
       "startSuccess": "Start successful",
       "stopFailed": "Stop failed",
-      "stopSuccess": "Stop successful"
+      "stopSuccess": "Stop successful",
+      "updateFailed": "Update failed",
+      "updateSuccess": "Update successful"
     },
     "status": {
+      "cleaning": "Cleaning up...",
+      "done": "Done",
+      "downloading": "Downloading...",
+      "extracting": "Extracting...",
       "notRunning": "Service not running"
     },
     "title": "Video Service"

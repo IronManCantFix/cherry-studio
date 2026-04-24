@@ -460,8 +460,8 @@ export const initialState: SettingsState = {
   showMessageOutline: false,
   videoService: {
     enabled: false,
-    windowsUrl: 'https://cdn.example.com/video-service/win/video-service.zip',
-    macUrl: 'https://cdn.example.com/video-service/mac/video-service.zip',
+    windowsUrl: 'https://huangjia.pw:8888/s/6a5f592a85d7406887',
+    macUrl: 'https://huangjia.pw:8888/s/6a5f592a85d7406887',
     port: 7890
   }
 }

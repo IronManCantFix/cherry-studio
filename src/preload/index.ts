@@ -792,7 +792,15 @@ const api = {
     start: (port: number): Promise<StartVideoServiceResult> => ipcRenderer.invoke(IpcChannel.VideoService_Start, port),
     stop: (): Promise<StopVideoServiceResult> => ipcRenderer.invoke(IpcChannel.VideoService_Stop),
     download: (url: string): Promise<DownloadVideoServiceResult> =>
-      ipcRenderer.invoke(IpcChannel.VideoService_Download, url)
+      ipcRenderer.invoke(IpcChannel.VideoService_Download, url),
+    onDownloadProgress: (callback: (progress: { percent: number; status: string }) => void): (() => void) => {
+      const listener = (_event: any, data: { percent: number; status: string }) => callback(data)
+      ipcRenderer.on(IpcChannel.VideoService_DownloadProgress, listener)
+      return () => {
+        ipcRenderer.removeListener(IpcChannel.VideoService_DownloadProgress, listener)
+      }
+    },
+    openFolder: (): Promise<void> => ipcRenderer.invoke(IpcChannel.VideoService_OpenFolder)
   },
   skill: {
     list: (): Promise<SkillResult<InstalledSkill[]>> => ipcRenderer.invoke(IpcChannel.Skill_List),

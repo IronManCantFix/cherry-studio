@@ -64,6 +64,10 @@ class VideoServiceManagerClass {
     const config = this.getState().settings.videoService
     return `http://localhost:${config.port}`
   }
+
+  async openFolder(): Promise<void> {
+    await window.api.videoService.openFolder()
+  }
 }
 
 let instance: VideoServiceManagerClass | null = null
