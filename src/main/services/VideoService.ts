@@ -1,8 +1,9 @@
 import { IpcChannel } from '@shared/IpcChannel'
+import AdmZip from 'adm-zip'
 import type { ChildProcess } from 'child_process'
 import { spawn } from 'child_process'
 import type { IpcMainInvokeEvent } from 'electron'
-import { ipcMain } from 'electron'
+import { ipcMain, net } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -94,9 +95,38 @@ export class VideoService {
   }
 
   async download(url: string): Promise<{ success: boolean; error?: string }> {
-    // 下载逻辑由Electron的net模块实现，这里返回成功
-    logger.info(`Download requested from ${url}`)
-    return { success: true }
+    try {
+      logger.info(`Downloading video service from ${url}`)
+
+      if (!fs.existsSync(this.serviceDir)) {
+        fs.mkdirSync(this.serviceDir, { recursive: true })
+      }
+
+      const zipPath = path.join(this.serviceDir, 'video-service.zip')
+
+      // Download
+      const response = await net.fetch(url)
+      if (!response.ok) {
+        return { success: false, error: `Download failed: HTTP ${response.status}` }
+      }
+
+      const arrayBuffer = await response.arrayBuffer()
+      fs.writeFileSync(zipPath, Buffer.from(arrayBuffer))
+      logger.info(`Downloaded to ${zipPath}`)
+
+      // Extract
+      const zip = new AdmZip(zipPath)
+      zip.extractAllTo(this.serviceDir, true)
+      logger.info(`Extracted to ${this.serviceDir}`)
+
+      // Cleanup zip
+      fs.unlinkSync(zipPath)
+
+      return { success: true }
+    } catch (error: any) {
+      logger.error('Failed to download video service:', error)
+      return { success: false, error: error.message }
+    }
   }
 }
 
