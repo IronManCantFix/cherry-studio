@@ -2,6 +2,7 @@ import App from '@renderer/components/MinApp/MinApp'
 import { useMinapps } from '@renderer/hooks/useMinapps'
 import { useRuntime } from '@renderer/hooks/useRuntime'
 import { useSettings } from '@renderer/hooks/useSettings'
+import { useVideoService } from '@renderer/hooks/useVideoService'
 import {
   FileSearch,
   Folder,
@@ -14,7 +15,7 @@ import {
   Video
 } from 'lucide-react'
 import type { FC } from 'react'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
@@ -25,6 +26,32 @@ const LaunchpadPage: FC = () => {
   const { defaultPaintingProvider } = useSettings()
   const { pinned } = useMinapps()
   const { openedKeepAliveMinapps } = useRuntime()
+  const { installed, startService, videoServiceRunning, loading } = useVideoService()
+
+  const handleVideoClick = useCallback(async () => {
+    if (!installed) {
+      window.modal.confirm({
+        title: t('videoService.download.title'),
+        content: t('videoService.download.content'),
+        okText: t('videoService.actions.download'),
+        cancelText: t('common.cancel'),
+        onOk: async () => {
+          navigate('/settings/video-service')
+        }
+      })
+      return
+    }
+
+    if (!videoServiceRunning) {
+      const success = await startService()
+      if (!success) {
+        window.toast.error(t('videoService.messages.startFailed'))
+        return
+      }
+    }
+
+    navigate('/video')
+  }, [installed, videoServiceRunning, startService, navigate, t])
 
   const appMenuItems = [
     {
@@ -119,7 +146,15 @@ const LaunchpadPage: FC = () => {
           <SectionTitle>{t('launchpad.apps')}</SectionTitle>
           <Grid>
             {appMenuItems.map((item) => (
-              <AppIcon key={item.path} onClick={() => navigate(item.path)}>
+              <AppIcon
+                key={item.path}
+                onClick={() => {
+                  if (item.path === '/video') {
+                    handleVideoClick()
+                  } else {
+                    navigate(item.path)
+                  }
+                }}>
                 <IconContainer>
                   <IconWrapper bgColor={item.bgColor}>{item.icon}</IconWrapper>
                 </IconContainer>

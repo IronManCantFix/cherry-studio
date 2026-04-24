@@ -6090,6 +6090,10 @@
       "stop": "Stop"
     },
     "description": "Configure video service download and startup",
+    "download": {
+      "content": "You need to download the video service before using this feature. Go to settings to download?",
+      "title": "Video Service Not Installed"
+    },
     "fields": {
       "macUrl": "Mac Download URL",
       "port": "Service Port",
