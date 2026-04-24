@@ -33,9 +33,10 @@ export class VideoService {
     }
   }
 
-  async writeConfig(port: number, apiServerUrl: string, apiKey: string): Promise<void> {
-    const configContent = `base_url: "${apiServerUrl}"
-api_key: "${apiKey}"
+  async writeConfig(comfyuiUrl: string, comfyuiApiKey: string): Promise<void> {
+    const configContent = `comfyui:
+  comfyui_url: ${comfyuiUrl}
+  comfyui_api_key: '${comfyuiApiKey}'
 `
     if (!fs.existsSync(this.serviceDir)) {
       fs.mkdirSync(this.serviceDir, { recursive: true })
