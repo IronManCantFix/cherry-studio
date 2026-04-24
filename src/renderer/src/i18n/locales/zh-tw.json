@@ -1951,6 +1951,9 @@
     "clear_images": "清空圖片",
     "copied": "已複製",
     "copy": "複製",
+    "defaultAssistantName": "默認助手",
+    "defaultAssistantPrompt": "",
+    "defaultTopicName": "默認話題",
     "default_topic": "預設話題",
     "delete_assistant_confirm": "確定刪除該助手？所有會話和記錄將被刪除。",
     "delete_record_confirm": "確定刪除該生成記錄？",
@@ -1993,10 +1996,7 @@
     "session_name_placeholder": "會話名稱",
     "stop": "停止生成",
     "subtitle": "對接國內 AI 圖生圖介面",
-    "title": "圖生圖",
-    "defaultAssistantPrompt": "",
-    "defaultAssistantName": "默認助手",
-    "defaultTopicName": "默認話題"
+    "title": "圖生圖"
   },
   "import": {
     "chatgpt": {
@@ -5919,7 +5919,8 @@
     "paintings": "繪畫",
     "settings": "設定",
     "store": "助手庫",
-    "translate": "翻譯"
+    "translate": "翻譯",
+    "video": "[to be translated]:Video Generation"
   },
   "trace": {
     "backList": "回到清單",
@@ -6081,6 +6082,31 @@
     "noReleaseNotes": "暫無更新日誌",
     "saveDataError": "儲存資料失敗，請重試",
     "title": "更新提示"
+  },
+  "videoService": {
+    "actions": {
+      "download": "[to be translated]:Download",
+      "start": "[to be translated]:Start",
+      "stop": "[to be translated]:Stop"
+    },
+    "description": "[to be translated]:Configure video service download and startup",
+    "fields": {
+      "macUrl": "[to be translated]:Mac Download URL",
+      "port": "[to be translated]:Service Port",
+      "windowsUrl": "[to be translated]:Windows Download URL"
+    },
+    "messages": {
+      "downloadFailed": "[to be translated]:Download failed",
+      "downloadSuccess": "[to be translated]:Download successful",
+      "startFailed": "[to be translated]:Start failed",
+      "startSuccess": "[to be translated]:Start successful",
+      "stopFailed": "[to be translated]:Stop failed",
+      "stopSuccess": "[to be translated]:Stop successful"
+    },
+    "status": {
+      "notRunning": "[to be translated]:Service not running"
+    },
+    "title": "[to be translated]:Video Service"
   },
   "warning": {
     "missing_provider": "供應商不存在，已改用預設供應商 {{provider}}。這可能導致問題。"

@@ -1951,6 +1951,9 @@
     "clear_images": "清空图片",
     "copied": "已复制",
     "copy": "复制",
+    "defaultAssistantName": "默认助手",
+    "defaultAssistantPrompt": "",
+    "defaultTopicName": "默认话题",
     "default_topic": "默认话题",
     "delete_assistant_confirm": "确定删除该助手？所有会话和记录将被删除。",
     "delete_record_confirm": "确定删除该生成记录？",
@@ -1993,10 +1996,7 @@
     "session_name_placeholder": "会话名称",
     "stop": "停止生成",
     "subtitle": "对接国内 AI 图生图接口",
-    "title": "图生图",
-    "defaultAssistantPrompt": "",
-    "defaultAssistantName": "默认助手",
-    "defaultTopicName": "默认话题"
+    "title": "图生图"
   },
   "import": {
     "chatgpt": {
@@ -5922,31 +5922,6 @@
     "translate": "翻译",
     "video": "视频生成"
   },
-  "videoService": {
-    "title": "视频生成服务",
-    "description": "配置视频生成服务的下载和启动",
-    "fields": {
-      "windowsUrl": "Windows下载地址",
-      "macUrl": "Mac下载地址",
-      "port": "服务端口"
-    },
-    "actions": {
-      "download": "下载服务",
-      "start": "启动服务",
-      "stop": "停止服务"
-    },
-    "messages": {
-      "downloadSuccess": "下载成功",
-      "downloadFailed": "下载失败",
-      "startSuccess": "启动成功",
-      "startFailed": "启动失败",
-      "stopSuccess": "停止成功",
-      "stopFailed": "停止失败"
-    },
-    "status": {
-      "notRunning": "服务未运行"
-    }
-  },
   "trace": {
     "backList": "返回列表",
     "edasSupport": "Powered by Alibaba Cloud EDAS",
@@ -6107,6 +6082,31 @@
     "noReleaseNotes": "暂无更新日志",
     "saveDataError": "保存数据失败，请重试",
     "title": "更新提示"
+  },
+  "videoService": {
+    "actions": {
+      "download": "下载服务",
+      "start": "启动服务",
+      "stop": "停止服务"
+    },
+    "description": "配置视频生成服务的下载和启动",
+    "fields": {
+      "macUrl": "Mac下载地址",
+      "port": "服务端口",
+      "windowsUrl": "Windows下载地址"
+    },
+    "messages": {
+      "downloadFailed": "下载失败",
+      "downloadSuccess": "下载成功",
+      "startFailed": "启动失败",
+      "startSuccess": "启动成功",
+      "stopFailed": "停止失败",
+      "stopSuccess": "停止成功"
+    },
+    "status": {
+      "notRunning": "服务未运行"
+    },
+    "title": "视频生成服务"
   },
   "warning": {
     "missing_provider": "供应商不存在，已回退到默认供应商 {{provider}}。这可能导致问题。"

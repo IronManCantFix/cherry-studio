@@ -15,7 +15,7 @@ class VideoServiceManagerClass {
       const status = await window.api.videoService.getStatus()
       return status.installed
     } catch (error) {
-      logger.error('Failed to check video service status:', error)
+      logger.error('Failed to check video service status', error as Error)
       return false
     }
   }
@@ -25,7 +25,7 @@ class VideoServiceManagerClass {
       const status = await window.api.videoService.getStatus()
       return status.running
     } catch (error) {
-      logger.error('Failed to check video service running status:', error)
+      logger.error('Failed to check video service running status', error as Error)
       return false
     }
   }
@@ -35,7 +35,7 @@ class VideoServiceManagerClass {
       const result = await window.api.videoService.download(url)
       return result.success
     } catch (error) {
-      logger.error('Failed to download video service:', error)
+      logger.error('Failed to download video service', error as Error)
       return false
     }
   }
@@ -45,7 +45,7 @@ class VideoServiceManagerClass {
       const result = await window.api.videoService.start(port)
       return result.success
     } catch (error) {
-      logger.error('Failed to start video service:', error)
+      logger.error('Failed to start video service', error as Error)
       return false
     }
   }
@@ -55,7 +55,7 @@ class VideoServiceManagerClass {
       const result = await window.api.videoService.stop()
       return result.success
     } catch (error) {
-      logger.error('Failed to stop video service:', error)
+      logger.error('Failed to stop video service', error as Error)
       return false
     }
   }

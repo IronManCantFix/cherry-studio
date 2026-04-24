@@ -1951,6 +1951,9 @@
     "clear_images": "[to be translated]:Clear Images",
     "copied": "[to be translated]:Copied",
     "copy": "[to be translated]:Copy",
+    "defaultAssistantName": "[to be translated]:Default Assistant",
+    "defaultAssistantPrompt": "[to be translated]:",
+    "defaultTopicName": "[to be translated]:Default Topic",
     "default_topic": "[to be translated]:Default Topic",
     "delete_assistant_confirm": "[to be translated]:Delete this assistant? All sessions and records will be lost.",
     "delete_record_confirm": "[to be translated]:Delete this generation record?",
@@ -5916,7 +5919,8 @@
     "paintings": "ペインティング",
     "settings": "設定",
     "store": "アシスタントライブラリ",
-    "translate": "翻訳"
+    "translate": "翻訳",
+    "video": "[to be translated]:Video Generation"
   },
   "trace": {
     "backList": "リストに戻る",
@@ -6078,6 +6082,31 @@
     "noReleaseNotes": "暫無更新日誌",
     "saveDataError": "データの保存に失敗しました。もう一度お試しください。",
     "title": "更新"
+  },
+  "videoService": {
+    "actions": {
+      "download": "[to be translated]:Download",
+      "start": "[to be translated]:Start",
+      "stop": "[to be translated]:Stop"
+    },
+    "description": "[to be translated]:Configure video service download and startup",
+    "fields": {
+      "macUrl": "[to be translated]:Mac Download URL",
+      "port": "[to be translated]:Service Port",
+      "windowsUrl": "[to be translated]:Windows Download URL"
+    },
+    "messages": {
+      "downloadFailed": "[to be translated]:Download failed",
+      "downloadSuccess": "[to be translated]:Download successful",
+      "startFailed": "[to be translated]:Start failed",
+      "startSuccess": "[to be translated]:Start successful",
+      "stopFailed": "[to be translated]:Stop failed",
+      "stopSuccess": "[to be translated]:Stop successful"
+    },
+    "status": {
+      "notRunning": "[to be translated]:Service not running"
+    },
+    "title": "[to be translated]:Video Service"
   },
   "warning": {
     "missing_provider": "サプライヤーが存在しないため、デフォルトのサプライヤー {{provider}} にロールバックされました。これにより問題が発生する可能性があります。"

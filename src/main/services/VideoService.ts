@@ -1,7 +1,8 @@
-import { ChildProcess, spawn } from 'child_process'
+import { IpcChannel } from '@shared/IpcChannel'
+import type { ChildProcess } from 'child_process'
+import { spawn } from 'child_process'
 import type { IpcMainInvokeEvent } from 'electron'
-import { app } from 'electron'
-import { IpcChannel, ipcMain } from 'electron'
+import { app, ipcMain } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -127,5 +128,3 @@ export const registerVideoServiceHandlers = () => {
     return await service.download(url)
   })
 }
-
-export { getVideoService, registerVideoServiceHandlers, VideoService }

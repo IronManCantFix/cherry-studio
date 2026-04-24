@@ -2,7 +2,7 @@ import { loggerService } from '@logger'
 import { initVideoServiceManager } from '@renderer/services/VideoServiceManager'
 import type { RootState } from '@renderer/store'
 import { useAppDispatch, useAppSelector } from '@renderer/store'
-import { setVideoServiceRunning } from '@renderer/store/runtime'
+import { setVideoServiceRunningAction } from '@renderer/store/runtime'
 import { useCallback, useEffect, useState } from 'react'
 
 const logger = loggerService.withContext('useVideoService')
@@ -24,9 +24,9 @@ export const useVideoService = () => {
       const isInstalled = await manager.checkInstalled()
       setInstalled(isInstalled)
       const isRunning = await manager.checkRunning()
-      dispatch(setVideoServiceRunning(isRunning))
+      dispatch(setVideoServiceRunningAction(isRunning))
     } catch (error) {
-      logger.error('Failed to check video service status:', error)
+      logger.error('Failed to check video service status', error as Error)
     } finally {
       setLoading(false)
     }
@@ -37,7 +37,7 @@ export const useVideoService = () => {
     try {
       const result = await manager.start(videoServiceConfig.port)
       if (result) {
-        dispatch(setVideoServiceRunning(true))
+        dispatch(setVideoServiceRunningAction(true))
       }
       return result
     } finally {
@@ -50,7 +50,7 @@ export const useVideoService = () => {
     try {
       const result = await manager.stop()
       if (result) {
-        dispatch(setVideoServiceRunning(false))
+        dispatch(setVideoServiceRunningAction(false))
       }
       return result
     } finally {

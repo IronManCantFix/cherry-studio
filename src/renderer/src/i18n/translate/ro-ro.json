@@ -1951,6 +1951,9 @@
     "clear_images": "[to be translated]:Clear Images",
     "copied": "[to be translated]:Copied",
     "copy": "[to be translated]:Copy",
+    "defaultAssistantName": "[to be translated]:Default Assistant",
+    "defaultAssistantPrompt": "[to be translated]:",
+    "defaultTopicName": "[to be translated]:Default Topic",
     "default_topic": "[to be translated]:Default Topic",
     "delete_assistant_confirm": "[to be translated]:Delete this assistant? All sessions and records will be lost.",
     "delete_record_confirm": "[to be translated]:Delete this generation record?",
@@ -5916,7 +5919,8 @@
     "paintings": "Imagini",
     "settings": "Setări",
     "store": "Bibliotecă asistenți",
-    "translate": "Traducere"
+    "translate": "Traducere",
+    "video": "[to be translated]:Video Generation"
   },
   "trace": {
     "backList": "Înapoi la listă",
@@ -6078,6 +6082,31 @@
     "noReleaseNotes": "Nicio notă de lansare",
     "saveDataError": "Salvarea datelor a eșuat, te rugăm să încerci din nou.",
     "title": "Actualizare"
+  },
+  "videoService": {
+    "actions": {
+      "download": "[to be translated]:Download",
+      "start": "[to be translated]:Start",
+      "stop": "[to be translated]:Stop"
+    },
+    "description": "[to be translated]:Configure video service download and startup",
+    "fields": {
+      "macUrl": "[to be translated]:Mac Download URL",
+      "port": "[to be translated]:Service Port",
+      "windowsUrl": "[to be translated]:Windows Download URL"
+    },
+    "messages": {
+      "downloadFailed": "[to be translated]:Download failed",
+      "downloadSuccess": "[to be translated]:Download successful",
+      "startFailed": "[to be translated]:Start failed",
+      "startSuccess": "[to be translated]:Start successful",
+      "stopFailed": "[to be translated]:Stop failed",
+      "stopSuccess": "[to be translated]:Stop successful"
+    },
+    "status": {
+      "notRunning": "[to be translated]:Service not running"
+    },
+    "title": "[to be translated]:Video Service"
   },
   "warning": {
     "missing_provider": "Furnizorul nu există; s-a revenit la furnizorul implicit {{provider}}. Acest lucru poate cauza probleme."

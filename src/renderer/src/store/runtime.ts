@@ -222,6 +222,9 @@ const runtimeSlice = createSlice({
     },
     setApiServerRunningAction: (state, action: PayloadAction<boolean>) => {
       state.apiServerRunning = action.payload
+    },
+    setVideoServiceRunningAction: (state, action: PayloadAction<boolean>) => {
+      state.videoServiceRunning = action.payload
     }
   }
 })
@@ -255,7 +258,8 @@ export const {
   setWebSearchStatus,
   // Region detection
   setDetectedRegion,
-  setApiServerRunningAction
+  setApiServerRunningAction,
+  setVideoServiceRunningAction
 } = runtimeSlice.actions
 
 export default runtimeSlice.reducer

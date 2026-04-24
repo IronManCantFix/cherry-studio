@@ -2,13 +2,12 @@ import { useVideoService } from '@renderer/hooks/useVideoService'
 import type { FC } from 'react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 const VideoPage: FC = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
   const { videoServiceRunning, getServiceUrl } = useVideoService()
 
   useEffect(() => {

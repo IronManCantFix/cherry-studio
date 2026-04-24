@@ -1951,6 +1951,9 @@
     "clear_images": "Clear Images",
     "copied": "Copied",
     "copy": "Copy",
+    "defaultAssistantName": "Default Assistant",
+    "defaultAssistantPrompt": "",
+    "defaultTopicName": "Default Topic",
     "default_topic": "Default Topic",
     "delete_assistant_confirm": "Delete this assistant? All sessions and records will be lost.",
     "delete_record_confirm": "Delete this generation record?",
@@ -1993,10 +1996,7 @@
     "session_name_placeholder": "Session name",
     "stop": "Stop",
     "subtitle": "Connect to domestic AI image generation APIs",
-    "title": "Text to Image",
-    "defaultAssistantPrompt": "",
-    "defaultAssistantName": "Default Assistant",
-    "defaultTopicName": "Default Topic"
+    "title": "Text to Image"
   },
   "import": {
     "chatgpt": {
@@ -5922,31 +5922,6 @@
     "translate": "Translate",
     "video": "Video Generation"
   },
-  "videoService": {
-    "title": "Video Service",
-    "description": "Configure video service download and startup",
-    "fields": {
-      "windowsUrl": "Windows Download URL",
-      "macUrl": "Mac Download URL",
-      "port": "Service Port"
-    },
-    "actions": {
-      "download": "Download",
-      "start": "Start",
-      "stop": "Stop"
-    },
-    "messages": {
-      "downloadSuccess": "Download successful",
-      "downloadFailed": "Download failed",
-      "startSuccess": "Start successful",
-      "startFailed": "Start failed",
-      "stopSuccess": "Stop successful",
-      "stopFailed": "Stop failed"
-    },
-    "status": {
-      "notRunning": "Service not running"
-    }
-  },
   "trace": {
     "backList": "Back To List",
     "edasSupport": "Powered by Alibaba Cloud EDAS",
@@ -6107,6 +6082,31 @@
     "noReleaseNotes": "No release notes",
     "saveDataError": "Failed to save data, please try again.",
     "title": "Update"
+  },
+  "videoService": {
+    "actions": {
+      "download": "Download",
+      "start": "Start",
+      "stop": "Stop"
+    },
+    "description": "Configure video service download and startup",
+    "fields": {
+      "macUrl": "Mac Download URL",
+      "port": "Service Port",
+      "windowsUrl": "Windows Download URL"
+    },
+    "messages": {
+      "downloadFailed": "Download failed",
+      "downloadSuccess": "Download successful",
+      "startFailed": "Start failed",
+      "startSuccess": "Start successful",
+      "stopFailed": "Stop failed",
+      "stopSuccess": "Stop successful"
+    },
+    "status": {
+      "notRunning": "Service not running"
+    },
+    "title": "Video Service"
   },
   "warning": {
     "missing_provider": "The supplier does not exist; reverted to the default supplier {{provider}}. This may cause issues."

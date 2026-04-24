@@ -77,7 +77,7 @@ const VideoServiceSettings: FC = () => {
         <FieldLabel>{t('videoService.fields.port')}</FieldLabel>
         <StyledInputNumber
           value={videoServiceConfig.port}
-          onChange={(value) => dispatch(setVideoServicePort(value || 7890))}
+          onChange={(value) => dispatch(setVideoServicePort(typeof value === 'number' ? value : 7890))}
           min={1000}
           max={65535}
         />
