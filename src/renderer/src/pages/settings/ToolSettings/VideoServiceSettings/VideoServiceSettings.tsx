@@ -15,8 +15,8 @@ const { Title, Text } = Typography
 
 const defaultVideoServiceConfig = {
   enabled: false,
-  windowsUrl: 'https://huangjia.pw:8888/s/6a5f592a85d7406887',
-  macUrl: 'https://huangjia.pw:8888/s/6a5f592a85d7406887',
+  windowsUrl: 'https://huangjia.pw:8888/s/download/6a5f592a85d7406887?token=b72f2a61a5d9cd229c436f1bb3406ad0',
+  macUrl: 'https://huangjia.pw:8888/s/download/6a5f592a85d7406887?token=b72f2a61a5d9cd229c436f1bb3406ad0',
   port: 7890
 }
 
