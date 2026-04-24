@@ -2,10 +2,11 @@ import { IpcChannel } from '@shared/IpcChannel'
 import type { ChildProcess } from 'child_process'
 import { spawn } from 'child_process'
 import type { IpcMainInvokeEvent } from 'electron'
-import { app, ipcMain } from 'electron'
+import { ipcMain } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 
+import { getPluginsPath } from '../utils'
 import { loggerService } from './LoggerService'
 
 const logger = loggerService.withContext('VideoService')
@@ -16,7 +17,7 @@ export class VideoService {
   private configPath: string
 
   constructor() {
-    this.serviceDir = path.join(app.getPath('userData'), '.cherrystudio', 'plugins', 'video-service')
+    this.serviceDir = getPluginsPath('video-service')
     this.configPath = path.join(this.serviceDir, 'config.yaml')
   }
 

@@ -49,6 +49,24 @@ export function getDataPath(subPath?: string) {
   return dataPath
 }
 
+export function getPluginsPath(subPath?: string) {
+  const pluginsPath = path.join(app.getPath('userData'), '.cherrystudio', 'plugins')
+
+  if (!fs.existsSync(pluginsPath)) {
+    fs.mkdirSync(pluginsPath, { recursive: true })
+  }
+
+  if (subPath) {
+    const fullPath = path.join(pluginsPath, subPath)
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath, { recursive: true })
+    }
+    return fullPath
+  }
+
+  return pluginsPath
+}
+
 export function getInstanceName(baseURL: string) {
   try {
     return new URL(baseURL).host.split('.')[0]
