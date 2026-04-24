@@ -9,8 +9,13 @@ const logger = loggerService.withContext('useVideoService')
 
 export const useVideoService = () => {
   const dispatch = useAppDispatch()
-  const videoServiceConfig = useAppSelector((state: RootState) => state.settings.videoService)
-  const videoServiceRunning = useAppSelector((state: RootState) => state.runtime.videoServiceRunning)
+  const videoServiceConfig = useAppSelector((state: RootState) => state.settings.videoService) || {
+    enabled: false,
+    windowsUrl: 'https://cdn.example.com/video-service/win/video-service.zip',
+    macUrl: 'https://cdn.example.com/video-service/mac/video-service.zip',
+    port: 7890
+  }
+  const videoServiceRunning = useAppSelector((state: RootState) => state.runtime.videoServiceRunning) || false
   const [loading, setLoading] = useState(false)
   const [installed, setInstalled] = useState(false)
 
