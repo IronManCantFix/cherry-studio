@@ -26,7 +26,7 @@ const LaunchpadPage: FC = () => {
   const { defaultPaintingProvider } = useSettings()
   const { pinned } = useMinapps()
   const { openedKeepAliveMinapps } = useRuntime()
-  const { installed, startService, videoServiceRunning, loading } = useVideoService()
+  const { installed, startService, videoServiceRunning } = useVideoService()
 
   const handleVideoClick = useCallback(async () => {
     if (!installed) {

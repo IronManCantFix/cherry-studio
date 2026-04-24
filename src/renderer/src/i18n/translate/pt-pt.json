@@ -6102,6 +6102,7 @@
     "messages": {
       "downloadFailed": "[to be translated]:Download failed",
       "downloadSuccess": "[to be translated]:Download successful",
+      "noDownloadUrl": "[to be translated]:Please configure the download URL first",
       "startFailed": "[to be translated]:Start failed",
       "startSuccess": "[to be translated]:Start successful",
       "stopFailed": "[to be translated]:Stop failed",

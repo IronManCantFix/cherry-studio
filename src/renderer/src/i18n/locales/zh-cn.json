@@ -6102,6 +6102,7 @@
     "messages": {
       "downloadFailed": "下载失败",
       "downloadSuccess": "下载成功",
+      "noDownloadUrl": "请先配置下载地址",
       "startFailed": "启动失败",
       "startSuccess": "启动成功",
       "stopFailed": "停止失败",

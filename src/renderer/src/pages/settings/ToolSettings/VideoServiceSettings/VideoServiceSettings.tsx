@@ -13,14 +13,26 @@ import { SettingContainer } from '../..'
 
 const { Title, Text } = Typography
 
+const defaultVideoServiceConfig = {
+  enabled: false,
+  windowsUrl: 'https://cdn.example.com/video-service/win/video-service.zip',
+  macUrl: 'https://cdn.example.com/video-service/mac/video-service.zip',
+  port: 7890
+}
+
 const VideoServiceSettings: FC = () => {
   const { theme } = useTheme()
   const dispatch = useAppDispatch()
   const { t } = useTranslation()
-  const videoServiceConfig = useAppSelector((state: RootState) => state.settings.videoService)
+  const videoServiceConfig =
+    useAppSelector((state: RootState) => state.settings.videoService) || defaultVideoServiceConfig
   const { videoServiceRunning, loading, installed, startService, stopService, downloadService } = useVideoService()
 
   const handleDownload = async () => {
+    if (!videoServiceConfig.windowsUrl && !videoServiceConfig.macUrl) {
+      window.toast.error(t('videoService.messages.noDownloadUrl'))
+      return
+    }
     const success = await downloadService()
     if (success) {
       window.toast.success(t('videoService.messages.downloadSuccess'))
