@@ -6097,6 +6097,7 @@
       "title": "视频服务未安装"
     },
     "fields": {
+      "downloadUrl": "下载地址",
       "macUrl": "Mac下载地址",
       "port": "服务端口",
       "windowsUrl": "Windows下载地址"

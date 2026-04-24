@@ -2,7 +2,7 @@ import { useTheme } from '@renderer/context/ThemeProvider'
 import { useVideoService } from '@renderer/hooks/useVideoService'
 import type { RootState } from '@renderer/store'
 import { useAppDispatch, useAppSelector } from '@renderer/store'
-import { setVideoServiceMacUrl, setVideoServicePort, setVideoServiceWindowsUrl } from '@renderer/store/settings'
+import { setVideoServicePort } from '@renderer/store/settings'
 import { Button, Input, InputNumber, Progress, Typography } from 'antd'
 import { Download, FolderOpen, Play, RefreshCw, Square } from 'lucide-react'
 import type { FC } from 'react'
@@ -99,16 +99,10 @@ const VideoServiceSettings: FC = () => {
 
       {/* Download Section */}
       <ConfigSection>
-        <FieldLabel>{t('videoService.fields.windowsUrl')}</FieldLabel>
+        <FieldLabel>{t('videoService.fields.downloadUrl')}</FieldLabel>
         <StyledInput
-          value={videoServiceConfig.windowsUrl}
-          onChange={(e) => dispatch(setVideoServiceWindowsUrl(e.target.value))}
-        />
-
-        <FieldLabel>{t('videoService.fields.macUrl')}</FieldLabel>
-        <StyledInput
-          value={videoServiceConfig.macUrl}
-          onChange={(e) => dispatch(setVideoServiceMacUrl(e.target.value))}
+          value={navigator.platform.includes('Mac') ? videoServiceConfig.macUrl : videoServiceConfig.windowsUrl}
+          disabled
         />
 
         <FieldLabel>{t('videoService.fields.port')}</FieldLabel>

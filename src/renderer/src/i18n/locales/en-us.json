@@ -6097,6 +6097,7 @@
       "title": "Video Service Not Installed"
     },
     "fields": {
+      "downloadUrl": "Download URL",
       "macUrl": "Mac Download URL",
       "port": "Service Port",
       "windowsUrl": "Windows Download URL"
