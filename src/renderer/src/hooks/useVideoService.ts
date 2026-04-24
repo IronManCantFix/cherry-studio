@@ -1,7 +1,7 @@
 import { loggerService } from '@logger'
 import { initVideoServiceManager } from '@renderer/services/VideoServiceManager'
 import type { RootState } from '@renderer/store'
-import { useAppDispatch, useAppSelector } from '@renderer/store'
+import store, { useAppDispatch, useAppSelector } from '@renderer/store'
 import { setVideoServiceDownloadAction, setVideoServiceRunningAction } from '@renderer/store/runtime'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -13,7 +13,7 @@ export const useVideoService = () => {
     enabled: false,
     windowsUrl: 'https://huangjia.pw:8888/s/download/6a5f592a85d7406887?token=b72f2a61a5d9cd229c436f1bb3406ad0',
     macUrl: 'https://huangjia.pw:8888/s/download/6a5f592a85d7406887?token=b72f2a61a5d9cd229c436f1bb3406ad0',
-    port: 7890
+    port: 8501
   }
   const videoServiceRunning = useAppSelector((state: RootState) => state.runtime.videoServiceRunning) || false
   const downloadState = useAppSelector((state: RootState) => state.runtime.videoServiceDownload)
@@ -41,7 +41,9 @@ export const useVideoService = () => {
   const startService = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await manager.start(videoServiceConfig.port)
+      const apiServerConfig = store.getState().settings.apiServer
+      const baseUrl = `http://${apiServerConfig.host}:${apiServerConfig.port}`
+      const result = await manager.start(videoServiceConfig.port, baseUrl, apiServerConfig.apiKey)
       if (result) {
         dispatch(setVideoServiceRunningAction(true))
       }
@@ -93,6 +95,12 @@ export const useVideoService = () => {
     await manager.openFolder()
   }, [manager])
 
+  const updateModelConfig = useCallback(async () => {
+    const apiServerConfig = store.getState().settings.apiServer
+    const baseUrl = `http://${apiServerConfig.host}:${apiServerConfig.port}`
+    return manager.updateModelConfig(baseUrl, apiServerConfig.apiKey)
+  }, [manager])
+
   useEffect(() => {
     void checkStatus()
   }, [checkStatus])
@@ -109,6 +117,7 @@ export const useVideoService = () => {
     downloadService,
     updateService,
     openFolder,
+    updateModelConfig,
     getServiceUrl
   }
 }

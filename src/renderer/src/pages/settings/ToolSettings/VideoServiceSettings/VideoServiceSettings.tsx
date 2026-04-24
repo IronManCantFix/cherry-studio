@@ -2,9 +2,9 @@ import { useTheme } from '@renderer/context/ThemeProvider'
 import { useVideoService } from '@renderer/hooks/useVideoService'
 import type { RootState } from '@renderer/store'
 import { useAppDispatch, useAppSelector } from '@renderer/store'
-import { setVideoServicePort } from '@renderer/store/settings'
-import { Button, Input, InputNumber, Progress, Typography } from 'antd'
-import { Download, FolderOpen, Play, RefreshCw, Square } from 'lucide-react'
+import { setVideoServiceMacUrl, setVideoServiceWindowsUrl } from '@renderer/store/settings'
+import { Button, Input, Progress, Tooltip, Typography } from 'antd'
+import { Download, FolderOpen, Play, RefreshCw, RotateCcw, Settings, Square } from 'lucide-react'
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -17,7 +17,7 @@ const defaultVideoServiceConfig = {
   enabled: false,
   windowsUrl: 'https://huangjia.pw:8888/s/download/6a5f592a85d7406887?token=b72f2a61a5d9cd229c436f1bb3406ad0',
   macUrl: 'https://huangjia.pw:8888/s/download/6a5f592a85d7406887?token=b72f2a61a5d9cd229c436f1bb3406ad0',
-  port: 7890
+  port: 8501
 }
 
 const VideoServiceSettings: FC = () => {
@@ -35,7 +35,8 @@ const VideoServiceSettings: FC = () => {
     stopService,
     downloadService,
     updateService,
-    openFolder
+    openFolder,
+    updateModelConfig
   } = useVideoService()
 
   const handleDownload = async () => {
@@ -69,6 +70,16 @@ const VideoServiceSettings: FC = () => {
     }
   }
 
+  const handleRestart = async () => {
+    await stopService()
+    const success = await startService()
+    if (success) {
+      window.toast.success(t('videoService.messages.startSuccess'))
+    } else {
+      window.toast.error(t('videoService.messages.startFailed'))
+    }
+  }
+
   const handleUpdate = async () => {
     if (!videoServiceConfig.windowsUrl && !videoServiceConfig.macUrl) {
       window.toast.error(t('videoService.messages.noDownloadUrl'))
@@ -86,6 +97,15 @@ const VideoServiceSettings: FC = () => {
     openFolder()
   }
 
+  const handleUpdateModelConfig = async () => {
+    const success = await updateModelConfig()
+    if (success) {
+      window.toast.success(t('videoService.messages.updateModelConfigSuccess'))
+    } else {
+      window.toast.error(t('videoService.messages.updateModelConfigFailed'))
+    }
+  }
+
   return (
     <Container theme={theme}>
       <HeaderSection>
@@ -97,71 +117,102 @@ const VideoServiceSettings: FC = () => {
         </HeaderContent>
       </HeaderSection>
 
+      {/* Server Control Panel */}
+      {installed && (
+        <ServerControlPanel $status={videoServiceRunning}>
+          <StatusSection>
+            <StatusIndicator $status={videoServiceRunning} />
+            <StatusContent>
+              <StatusText $status={videoServiceRunning}>
+                {videoServiceRunning ? t('videoService.status.running') : t('videoService.status.stopped')}
+              </StatusText>
+              <StatusSubtext>
+                {videoServiceRunning ? 'http://127.0.0.1:8501' : t('videoService.fields.port')}
+              </StatusSubtext>
+            </StatusContent>
+          </StatusSection>
+          <ControlButtons>
+            {videoServiceRunning && (
+              <Tooltip title={t('videoService.actions.restart')}>
+                <ActionButton $loading={loading} onClick={loading ? undefined : handleRestart}>
+                  <RotateCcw size={14} />
+                  <span>{t('videoService.actions.restart')}</span>
+                </ActionButton>
+              </Tooltip>
+            )}
+            <Tooltip title={videoServiceRunning ? t('videoService.actions.stop') : t('videoService.actions.start')}>
+              {videoServiceRunning ? (
+                <StopStartButton $loading={loading} onClick={loading ? undefined : handleStop}>
+                  <Square size={20} style={{ color: 'var(--color-status-error)' }} />
+                </StopStartButton>
+              ) : (
+                <StopStartButton $loading={loading} onClick={loading ? undefined : handleStart}>
+                  <Play size={20} style={{ color: 'var(--color-status-success)' }} />
+                </StopStartButton>
+              )}
+            </Tooltip>
+          </ControlButtons>
+        </ServerControlPanel>
+      )}
+
       {/* Download Section */}
       <ConfigSection>
-        <FieldLabel>{t('videoService.fields.downloadUrl')}</FieldLabel>
+        <FieldLabel>
+          {navigator.platform.includes('Mac') ? t('videoService.fields.macUrl') : t('videoService.fields.windowsUrl')}
+        </FieldLabel>
         <StyledInput
           value={navigator.platform.includes('Mac') ? videoServiceConfig.macUrl : videoServiceConfig.windowsUrl}
-          disabled
-        />
-
-        <FieldLabel>{t('videoService.fields.port')}</FieldLabel>
-        <StyledInputNumber
-          value={videoServiceConfig.port}
-          onChange={(value) => dispatch(setVideoServicePort(typeof value === 'number' ? value : 7890))}
-          min={1000}
-          max={65535}
+          onChange={(e) => {
+            const value = e.target.value
+            if (navigator.platform.includes('Mac')) {
+              dispatch(setVideoServiceMacUrl(value))
+            } else {
+              dispatch(setVideoServiceWindowsUrl(value))
+            }
+          }}
         />
       </ConfigSection>
 
-      {/* Control Section */}
-      <ControlSection>
-        {downloadState.loading && (
-          <ProgressWrapper>
-            <Progress
-              percent={downloadState.progress}
-              status={downloadState.progress < 100 ? 'active' : 'success'}
-              size="small"
-            />
-            <StatusText type="secondary">
-              {downloadState.status === 'downloading' && t('videoService.status.downloading')}
-              {downloadState.status === 'extracting' && t('videoService.status.extracting')}
-              {downloadState.status === 'cleaning' && t('videoService.status.cleaning')}
-              {downloadState.status === 'done' && t('videoService.status.done')}
-            </StatusText>
-          </ProgressWrapper>
-        )}
-        {!installed ? (
-          <Button icon={<Download size={14} />} onClick={handleDownload} loading={loading}>
-            {t('videoService.actions.download')}
+      {/* Download Progress */}
+      {downloadState.loading && (
+        <ProgressWrapper>
+          <Progress
+            percent={downloadState.progress}
+            status={downloadState.progress < 100 ? 'active' : 'success'}
+            size="small"
+          />
+          <ProgressStatusText type="secondary">
+            {downloadState.status === 'downloading' && t('videoService.status.downloading')}
+            {downloadState.status === 'extracting' && t('videoService.status.extracting')}
+            {downloadState.status === 'cleaning' && t('videoService.status.cleaning')}
+            {downloadState.status === 'done' && t('videoService.status.done')}
+          </ProgressStatusText>
+        </ProgressWrapper>
+      )}
+
+      {/* Action Buttons */}
+      {!installed ? (
+        <Button icon={<Download size={14} />} onClick={handleDownload} loading={loading}>
+          {t('videoService.actions.download')}
+        </Button>
+      ) : (
+        <ButtonRow>
+          <Button icon={<RefreshCw size={14} />} onClick={handleUpdate} loading={loading}>
+            {t('videoService.actions.update')}
           </Button>
-        ) : (
-          <>
-            <ButtonRow>
-              {videoServiceRunning ? (
-                <Button icon={<Square size={14} />} onClick={handleStop} loading={loading} danger>
-                  {t('videoService.actions.stop')}
-                </Button>
-              ) : (
-                <Button icon={<Play size={14} />} onClick={handleStart} loading={loading} type="primary">
-                  {t('videoService.actions.start')}
-                </Button>
-              )}
-              <Button icon={<RefreshCw size={14} />} onClick={handleUpdate} loading={loading}>
-                {t('videoService.actions.update')}
-              </Button>
-              <Button icon={<FolderOpen size={14} />} onClick={handleOpenFolder}>
-                {t('videoService.actions.openFolder')}
-              </Button>
-            </ButtonRow>
-          </>
-        )}
-      </ControlSection>
+          <Button icon={<FolderOpen size={14} />} onClick={handleOpenFolder}>
+            {t('videoService.actions.openFolder')}
+          </Button>
+          <Button icon={<Settings size={14} />} onClick={handleUpdateModelConfig}>
+            {t('videoService.actions.updateModelConfig')}
+          </Button>
+        </ButtonRow>
+      )}
     </Container>
   )
 }
 
-// Styled components similar to ApiServerSettings
+// Styled Components
 const Container = styled(SettingContainer)`
   display: flex;
   flex-direction: column;
@@ -180,6 +231,105 @@ const HeaderContent = styled.div`
   flex: 1;
 `
 
+const ServerControlPanel = styled.div<{ $status: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: 8px;
+  background: var(--color-background);
+  border: 1px solid ${(props) => (props.$status ? 'var(--color-status-success)' : 'var(--color-border)')};
+  transition: all 0.3s ease;
+  margin-bottom: 16px;
+`
+
+const StatusSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`
+
+const StatusIndicator = styled.div<{ $status: boolean }>`
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: ${(props) => (props.$status ? 'var(--color-status-success)' : 'var(--color-status-error)')};
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: ${(props) => (props.$status ? 'var(--color-status-success)' : 'var(--color-status-error)')};
+    opacity: 0.2;
+    animation: ${(props) => (props.$status ? 'pulse 2s infinite' : 'none')};
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.2;
+    }
+    50% {
+      transform: scale(1.5);
+      opacity: 0.1;
+    }
+  }
+`
+
+const StatusContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`
+
+const StatusText = styled.div<{ $status: boolean }>`
+  font-weight: 600;
+  font-size: 14px;
+  color: ${(props) => (props.$status ? 'var(--color-status-success)' : 'var(--color-text-1)')};
+`
+
+const StatusSubtext = styled.div`
+  font-size: 12px;
+  color: var(--color-text-3);
+`
+
+const ControlButtons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`
+
+const ActionButton = styled.div<{ $loading: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-2);
+  cursor: ${(props) => (props.$loading ? 'not-allowed' : 'pointer')};
+  opacity: ${(props) => (props.$loading ? 0.5 : 1)};
+  font-size: 12px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${(props) => (props.$loading ? 'var(--color-text-2)' : 'var(--color-primary)')};
+  }
+`
+
+const StopStartButton = styled.div<{ $loading: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ${(props) => (props.$loading ? 'not-allowed' : 'pointer')};
+  opacity: ${(props) => (props.$loading ? 0.5 : 1)};
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: ${(props) => (props.$loading ? 'scale(1)' : 'scale(1.1)')};
+  }
+`
+
 const ConfigSection = styled.div`
   display: flex;
   flex-direction: column;
@@ -195,7 +345,6 @@ const FieldLabel = styled.div`
   font-size: 14px;
   font-weight: 500;
   color: var(--color-text-1);
-  margin: 0;
 `
 
 const StyledInput = styled(Input)`
@@ -204,28 +353,18 @@ const StyledInput = styled(Input)`
   border: 1.5px solid var(--color-border);
 `
 
-const StyledInputNumber = styled(InputNumber)`
-  width: 120px;
-  border-radius: 6px;
-  border: 1.5px solid var(--color-border);
-`
-
-const ControlSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`
-
 const ButtonRow = styled.div`
   display: flex;
   gap: 12px;
+  margin-top: 12px;
 `
 
 const ProgressWrapper = styled.div`
   width: 100%;
+  margin-bottom: 12px;
 `
 
-const StatusText = styled(Text)`
+const ProgressStatusText = styled(Text)`
   font-size: 12px;
 `
 

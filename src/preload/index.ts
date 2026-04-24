@@ -789,7 +789,8 @@ const api = {
   },
   videoService: {
     getStatus: (): Promise<GetVideoServiceStatusResult> => ipcRenderer.invoke(IpcChannel.VideoService_GetStatus),
-    start: (port: number): Promise<StartVideoServiceResult> => ipcRenderer.invoke(IpcChannel.VideoService_Start, port),
+    start: (port: number, baseUrl?: string, apiKey?: string): Promise<StartVideoServiceResult> =>
+      ipcRenderer.invoke(IpcChannel.VideoService_Start, port, baseUrl, apiKey),
     stop: (): Promise<StopVideoServiceResult> => ipcRenderer.invoke(IpcChannel.VideoService_Stop),
     download: (url: string): Promise<DownloadVideoServiceResult> =>
       ipcRenderer.invoke(IpcChannel.VideoService_Download, url),
@@ -800,7 +801,9 @@ const api = {
         ipcRenderer.removeListener(IpcChannel.VideoService_DownloadProgress, listener)
       }
     },
-    openFolder: (): Promise<void> => ipcRenderer.invoke(IpcChannel.VideoService_OpenFolder)
+    openFolder: (): Promise<void> => ipcRenderer.invoke(IpcChannel.VideoService_OpenFolder),
+    updateModelConfig: (baseUrl: string, apiKey: string): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke(IpcChannel.VideoService_UpdateModelConfig, baseUrl, apiKey)
   },
   skill: {
     list: (): Promise<SkillResult<InstalledSkill[]>> => ipcRenderer.invoke(IpcChannel.Skill_List),

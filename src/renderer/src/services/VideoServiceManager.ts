@@ -40,9 +40,9 @@ class VideoServiceManagerClass {
     }
   }
 
-  async start(port: number): Promise<boolean> {
+  async start(port: number, baseUrl?: string, apiKey?: string): Promise<boolean> {
     try {
-      const result = await window.api.videoService.start(port)
+      const result = await window.api.videoService.start(port, baseUrl, apiKey)
       return result.success
     } catch (error) {
       logger.error('Failed to start video service', error as Error)
@@ -52,7 +52,9 @@ class VideoServiceManagerClass {
 
   async stop(): Promise<boolean> {
     try {
+      logger.info('Calling video service stop IPC')
       const result = await window.api.videoService.stop()
+      logger.info(`Stop result: ${JSON.stringify(result)}`)
       return result.success
     } catch (error) {
       logger.error('Failed to stop video service', error as Error)
@@ -61,12 +63,21 @@ class VideoServiceManagerClass {
   }
 
   getServiceUrl(): string {
-    const config = this.getState().settings.videoService
-    return `http://localhost:${config.port}`
+    return 'http://localhost:8501'
   }
 
   async openFolder(): Promise<void> {
     await window.api.videoService.openFolder()
+  }
+
+  async updateModelConfig(baseUrl: string, apiKey: string): Promise<boolean> {
+    try {
+      const result = await window.api.videoService.updateModelConfig(baseUrl, apiKey)
+      return result.success
+    } catch (error) {
+      logger.error('Failed to update model config', error as Error)
+      return false
+    }
   }
 }
 

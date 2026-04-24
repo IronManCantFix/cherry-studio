@@ -155,6 +155,7 @@ const titleKeyMap = {
   paintings: 'title.paintings',
   settings: 'title.settings',
   translate: 'title.translate',
+  video: 'title.video',
   openclaw: 'openclaw.title',
   agents: 'agent.sidebar_title'
 } as const

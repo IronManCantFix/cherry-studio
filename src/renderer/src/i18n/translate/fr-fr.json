@@ -6087,9 +6087,11 @@
     "actions": {
       "download": "[to be translated]:Download",
       "openFolder": "[to be translated]:Open Plugin Folder",
+      "restart": "[to be translated]:Restart",
       "start": "[to be translated]:Start",
       "stop": "[to be translated]:Stop",
-      "update": "[to be translated]:Update"
+      "update": "[to be translated]:Update",
+      "updateModelConfig": "[to be translated]:Update Model Config"
     },
     "description": "[to be translated]:Configure video service download and startup",
     "download": {
@@ -6111,6 +6113,8 @@
       "stopFailed": "[to be translated]:Stop failed",
       "stopSuccess": "[to be translated]:Stop successful",
       "updateFailed": "[to be translated]:Update failed",
+      "updateModelConfigFailed": "[to be translated]:Model config update failed",
+      "updateModelConfigSuccess": "[to be translated]:Model config updated successfully",
       "updateSuccess": "[to be translated]:Update successful"
     },
     "status": {
@@ -6118,7 +6122,9 @@
       "done": "[to be translated]:Done",
       "downloading": "[to be translated]:Downloading...",
       "extracting": "[to be translated]:Extracting...",
-      "notRunning": "[to be translated]:Service not running"
+      "notRunning": "[to be translated]:Service not running",
+      "running": "[to be translated]:Running",
+      "stopped": "[to be translated]:Stopped"
     },
     "title": "[to be translated]:Video Service"
   },

@@ -3,8 +3,10 @@ import AdmZip from 'adm-zip'
 import type { ChildProcess } from 'child_process'
 import { spawn } from 'child_process'
 import type { IpcMainInvokeEvent } from 'electron'
-import { BrowserWindow, ipcMain, net, shell } from 'electron'
+import { BrowserWindow, ipcMain, shell } from 'electron'
 import * as fs from 'fs'
+import * as https from 'https'
+import * as net from 'net'
 import * as path from 'path'
 
 import { getPluginsPath } from '../utils'
@@ -28,12 +30,30 @@ export class VideoService {
     return fs.existsSync(execPath)
   }
 
+  private checkPort(port: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const socket = new net.Socket()
+      socket.setTimeout(1000)
+      socket.on('connect', () => {
+        socket.destroy()
+        resolve(true)
+      })
+      socket.on('timeout', () => {
+        socket.destroy()
+        resolve(false)
+      })
+      socket.on('error', () => {
+        socket.destroy()
+        resolve(false)
+      })
+      socket.connect(port, '127.0.0.1')
+    })
+  }
+
   async getStatus(): Promise<{ running: boolean; installed: boolean }> {
     const installed = await this.checkInstalled()
-    return {
-      running: this.process !== null,
-      installed
-    }
+    const running = await this.checkPort(8501)
+    return { running, installed }
   }
 
   async writeConfig(comfyuiUrl: string, comfyuiApiKey: string): Promise<void> {
@@ -48,29 +68,63 @@ export class VideoService {
     logger.info(`Config written to ${this.configPath}`)
   }
 
-  async start(port: number): Promise<{ success: boolean; error?: string }> {
+  private async waitForPort(port: number, maxRetries = 30): Promise<boolean> {
+    for (let i = 0; i < maxRetries; i++) {
+      if (await this.checkPort(port)) return true
+      await new Promise((r) => setTimeout(r, 1000))
+    }
+    return false
+  }
+
+  async start(port: number, baseUrl?: string, apiKey?: string): Promise<{ success: boolean; error?: string }> {
     try {
       const isInstalled = await this.checkInstalled()
       if (!isInstalled) {
         return { success: false, error: 'Service not installed' }
       }
 
-      const execName = process.platform === 'win32' ? 'start.bat' : 'video-service'
-      const execPath = path.join(this.serviceDir, execName)
-      const args = process.platform === 'win32' ? [String(port)] : ['--port', String(port)]
+      // Update model config before starting
+      if (baseUrl && apiKey) {
+        const configResult = await this.updateModelConfig(baseUrl, apiKey)
+        if (!configResult.success) {
+          logger.warn(`Failed to update model config before start: ${configResult.error}`)
+        }
+      }
 
-      this.process = spawn(execPath, args, { cwd: this.serviceDir, detached: false })
+      if (process.platform === 'win32') {
+        const batPath = path.join(this.serviceDir, 'start.bat')
+        // Use a VBS script to run bat completely silently (no DOS window)
+        const vbsContent = `Set objShell = CreateObject("WScript.Shell")
+objShell.CurrentDirectory = "${this.serviceDir.replace(/\\/g, '\\\\')}"
+objShell.Run """${batPath.replace(/\\/g, '\\\\')}""", 0, False`
+        const vbsPath = path.join(this.serviceDir, '_start_silent.vbs')
+        fs.writeFileSync(vbsPath, vbsContent, 'utf-8')
+        this.process = spawn('wscript.exe', [vbsPath], {
+          detached: true,
+          stdio: 'ignore',
+          windowsHide: true
+        })
+        this.process.unref()
+      } else {
+        const execPath = path.join(this.serviceDir, 'video-service')
+        this.process = spawn(execPath, [], {
+          cwd: this.serviceDir,
+          detached: true,
+          stdio: 'ignore'
+        })
+        this.process.unref()
+      }
 
-      this.process.on('error', (err) => {
-        logger.error('VideoService process error:', err)
-      })
+      logger.info(`VideoService started, waiting for port 8501...`)
 
-      this.process.on('exit', (code) => {
-        logger.info(`VideoService exited with code ${code}`)
-        this.process = null
-      })
+      const ready = await this.waitForPort(8501)
+      if (ready) {
+        logger.info(`VideoService is ready on port 8501`)
+      } else {
+        logger.warn(`VideoService failed to start within timeout`)
+      }
 
-      return { success: true }
+      return { success: ready }
     } catch (error: any) {
       logger.error('Failed to start VideoService:', error)
       return { success: false, error: error.message }
@@ -78,15 +132,65 @@ export class VideoService {
   }
 
   async stop(): Promise<{ success: boolean; error?: string }> {
+    logger.info('stop() called')
     try {
-      if (this.process) {
-        if (process.platform === 'win32') {
-          spawn('taskkill', ['/pid', String(this.process.pid), '/f'])
-        } else {
-          this.process.kill('SIGTERM')
+      const child_process = await import('child_process')
+      const execSync = child_process.execSync
+
+      if (process.platform === 'win32') {
+        // Get all listening ports and find 8501
+        try {
+          const netstatOutput = execSync('netstat -ano', { encoding: 'utf-8', timeout: 5000 })
+          const lines = netstatOutput.split('\n')
+          const pids = new Set<string>()
+          for (const line of lines) {
+            if (line.includes(':8501') && line.includes('LISTENING')) {
+              const parts = line.trim().split(/\s+/)
+              const pid = parts[parts.length - 1]
+              if (pid && /^\d+$/.test(pid) && pid !== '0') {
+                pids.add(pid)
+              }
+            }
+          }
+          logger.info(`Port 8501 PIDs: ${[...pids].join(', ') || 'none'}`)
+
+          if (pids.size === 0) {
+            // Fallback: try to find by process name related to video-service
+            try {
+              const tasklist = execSync('tasklist /FI "IMAGENAME eq python*" /FO CSV /NH', {
+                encoding: 'utf-8',
+                timeout: 5000
+              })
+              logger.info(`Python processes: ${tasklist.substring(0, 500)}`)
+            } catch {
+              // ignore
+            }
+          }
+
+          for (const pid of pids) {
+            try {
+              execSync(`taskkill /PID ${pid} /T /F`, { encoding: 'utf-8', timeout: 5000 })
+              logger.info(`Killed PID ${pid}`)
+            } catch (e: any) {
+              logger.error(`taskkill PID ${pid} failed: ${e.message}`)
+            }
+          }
+        } catch (e: any) {
+          logger.error(`netstat failed: ${e.message}`)
         }
-        this.process = null
+      } else {
+        try {
+          const pid = execSync('lsof -ti :8501 -sTCP:LISTEN', { encoding: 'utf-8', timeout: 5000 }).trim()
+          if (pid) {
+            execSync(`kill -9 ${pid}`, { timeout: 5000 })
+            logger.info(`Killed PID ${pid}`)
+          }
+        } catch (e: any) {
+          logger.error(`lsof failed: ${e.message}`)
+        }
       }
+      this.process = null
+      logger.info(`VideoService stopped`)
       return { success: true }
     } catch (error: any) {
       logger.error('Failed to stop VideoService:', error)
@@ -112,36 +216,88 @@ export class VideoService {
 
       const zipPath = path.join(this.serviceDir, 'video-service.zip')
 
-      // Download with progress
-      const response = await net.fetch(url)
-      if (!response.ok) {
-        return { success: false, error: `Download failed: HTTP ${response.status}` }
-      }
+      // Download with progress using Node.js https
+      logger.info(`Fetching ${url}...`)
 
-      const totalBytes = Number(response.headers.get('content-length') || 0)
-      const chunks: Buffer[] = []
-      let receivedBytes = 0
-
-      if (response.body) {
-        const reader = response.body.getReader()
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          chunks.push(Buffer.from(value))
-          receivedBytes += value.length
-          if (totalBytes > 0) {
-            const percent = Math.round((receivedBytes / totalBytes) * 80)
-            this.sendProgress(percent, 'downloading')
+      const downloadWithRedirect = (downloadUrl: string, redirectCount = 0): Promise<void> => {
+        return new Promise((resolve, reject) => {
+          if (redirectCount > 10) {
+            return reject(new Error('Too many redirects'))
           }
-        }
+
+          const urlObj = new URL(downloadUrl)
+          const request = https.request(
+            {
+              hostname: urlObj.hostname,
+              port: urlObj.port || 443,
+              path: urlObj.pathname + urlObj.search,
+              method: 'GET',
+              headers: {
+                'User-Agent':
+                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+              }
+            },
+            (response) => {
+              // Handle redirects
+              if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400) {
+                const location = response.headers.location
+                if (location) {
+                  const nextUrl = location.startsWith('http') ? location : new URL(location, downloadUrl).href
+                  logger.info(`Redirect ${response.statusCode} -> ${nextUrl}`)
+                  resolve(downloadWithRedirect(nextUrl, redirectCount + 1))
+                  return
+                }
+              }
+
+              if (response.statusCode !== 200) {
+                let body = ''
+                response.on('data', (chunk: Buffer) => (body += chunk.toString()))
+                response.on('end', () => {
+                  logger.error(
+                    `HTTP ${response.statusCode}, headers: ${JSON.stringify(response.headers)}, body: ${body.substring(0, 500)}`
+                  )
+                  reject(new Error(`HTTP ${response.statusCode}`))
+                })
+                return
+              }
+
+              const totalBytes = Number(response.headers['content-length'] || 0)
+              let receivedBytes = 0
+              let lastPercent = -1
+              const writeStream = fs.createWriteStream(zipPath)
+
+              response.on('data', (chunk: Buffer) => {
+                receivedBytes += chunk.length
+                if (totalBytes > 0) {
+                  const percent = Math.round((receivedBytes / totalBytes) * 80)
+                  if (percent !== lastPercent) {
+                    lastPercent = percent
+                    this.sendProgress(percent, 'downloading')
+                  }
+                }
+              })
+
+              response.on('error', reject)
+              writeStream.on('error', reject)
+              writeStream.on('finish', () => {
+                logger.info(`Downloaded ${receivedBytes} bytes to ${zipPath}`)
+                resolve()
+              })
+
+              response.pipe(writeStream)
+            }
+          )
+
+          request.on('error', reject)
+          request.end()
+        })
       }
 
-      const buffer = Buffer.concat(chunks)
-      fs.writeFileSync(zipPath, buffer)
-      logger.info(`Downloaded to ${zipPath}`)
+      await downloadWithRedirect(url)
       this.sendProgress(80, 'extracting')
 
-      // Extract
+      // Extract in next tick to avoid blocking
+      await new Promise<void>((resolve) => setImmediate(resolve))
       const zip = new AdmZip(zipPath)
       zip.extractAllTo(this.serviceDir, true)
       logger.info(`Extracted to ${this.serviceDir}`)
@@ -160,6 +316,29 @@ export class VideoService {
 
   async openFolder(): Promise<void> {
     await shell.openPath(this.serviceDir)
+  }
+
+  async updateModelConfig(baseUrl: string, apiKey: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const configPath = path.join(this.serviceDir, 'Pixelle-Video', 'config.yaml')
+      if (!fs.existsSync(configPath)) {
+        return { success: false, error: 'Config file not found: ' + configPath }
+      }
+
+      let content = fs.readFileSync(configPath, 'utf-8')
+      logger.info(`Config before update:\n${content}`)
+
+      // Replace llm section values
+      content = content.replace(/^(\s*api_key:\s*).*$/m, `$1'${apiKey}'`)
+      content = content.replace(/^(\s*base_url:\s*).*$/m, `$1'${baseUrl}'`)
+
+      fs.writeFileSync(configPath, content, 'utf-8')
+      logger.info(`Updated model config: base_url=${baseUrl}, api_key=${apiKey}`)
+      return { success: true }
+    } catch (error: any) {
+      logger.error('Failed to update model config:', error)
+      return { success: false, error: error.message }
+    }
   }
 }
 
@@ -180,9 +359,12 @@ export const registerVideoServiceHandlers = () => {
     return await service.getStatus()
   })
 
-  ipcMain.handle(IpcChannel.VideoService_Start, async (_event: IpcMainInvokeEvent, port: number) => {
-    return await service.start(port)
-  })
+  ipcMain.handle(
+    IpcChannel.VideoService_Start,
+    async (_event: IpcMainInvokeEvent, port: number, baseUrl?: string, apiKey?: string) => {
+      return await service.start(port, baseUrl, apiKey)
+    }
+  )
 
   ipcMain.handle(IpcChannel.VideoService_Stop, async () => {
     return await service.stop()
@@ -195,4 +377,11 @@ export const registerVideoServiceHandlers = () => {
   ipcMain.handle(IpcChannel.VideoService_OpenFolder, async () => {
     await service.openFolder()
   })
+
+  ipcMain.handle(
+    IpcChannel.VideoService_UpdateModelConfig,
+    async (_event: IpcMainInvokeEvent, baseUrl: string, apiKey: string) => {
+      return await service.updateModelConfig(baseUrl, apiKey)
+    }
+  )
 }

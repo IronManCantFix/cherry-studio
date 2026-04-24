@@ -6087,9 +6087,11 @@
     "actions": {
       "download": "下载服务",
       "openFolder": "打开插件目录",
+      "restart": "重启",
       "start": "启动服务",
       "stop": "停止服务",
-      "update": "更新服务"
+      "update": "更新服务",
+      "updateModelConfig": "更新模型配置"
     },
     "description": "配置视频服务的下载和启动",
     "download": {
@@ -6111,6 +6113,8 @@
       "stopFailed": "停止失败",
       "stopSuccess": "停止成功",
       "updateFailed": "更新失败",
+      "updateModelConfigFailed": "模型配置更新失败",
+      "updateModelConfigSuccess": "模型配置更新成功",
       "updateSuccess": "更新成功"
     },
     "status": {
@@ -6118,7 +6122,9 @@
       "done": "完成",
       "downloading": "下载中...",
       "extracting": "解压中...",
-      "notRunning": "服务未运行"
+      "notRunning": "服务未运行",
+      "running": "运行中",
+      "stopped": "已停止"
     },
     "title": "视频服务"
   },

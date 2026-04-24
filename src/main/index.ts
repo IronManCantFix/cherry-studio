@@ -306,6 +306,8 @@ if (!app.requestSingleInstanceLock()) {
       await openClawService.stopGateway()
       await mcpService.cleanup()
       await apiServerService.stop()
+      const { getVideoService } = await import('./services/VideoService')
+      await getVideoService().stop()
     } catch (error) {
       logger.warn('Error cleaning up services:', error as Error)
     }

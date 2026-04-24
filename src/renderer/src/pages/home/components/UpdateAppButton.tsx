@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 const UpdateAppButton: FC = () => {
+  return null
+
   const { update } = useRuntime()
   const { autoCheckUpdate } = useSettings()
   const { t } = useTranslation()
