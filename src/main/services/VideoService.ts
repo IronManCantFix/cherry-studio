@@ -16,7 +16,7 @@ export class VideoService {
   private configPath: string
 
   constructor() {
-    this.serviceDir = path.join(app.getPath('userData'), 'video-service')
+    this.serviceDir = path.join(app.getPath('userData'), '.cherrystudio', 'plugins', 'video-service')
     this.configPath = path.join(this.serviceDir, 'config.yaml')
   }
 
