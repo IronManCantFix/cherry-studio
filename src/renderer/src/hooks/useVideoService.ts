@@ -2,7 +2,7 @@ import { loggerService } from '@logger'
 import { initVideoServiceManager } from '@renderer/services/VideoServiceManager'
 import type { RootState } from '@renderer/store'
 import { useAppDispatch, useAppSelector } from '@renderer/store'
-import { setVideoServiceRunningAction } from '@renderer/store/runtime'
+import { setVideoServiceDownloadAction, setVideoServiceRunningAction } from '@renderer/store/runtime'
 import { useCallback, useEffect, useState } from 'react'
 
 const logger = loggerService.withContext('useVideoService')
@@ -16,9 +16,9 @@ export const useVideoService = () => {
     port: 7890
   }
   const videoServiceRunning = useAppSelector((state: RootState) => state.runtime.videoServiceRunning) || false
+  const downloadState = useAppSelector((state: RootState) => state.runtime.videoServiceDownload)
   const [loading, setLoading] = useState(false)
   const [installed, setInstalled] = useState(false)
-  const [downloadProgress, setDownloadProgress] = useState({ percent: 0, status: '' })
 
   const manager = initVideoServiceManager((() => {
     return { settings: { videoService: videoServiceConfig } } as RootState
@@ -64,11 +64,10 @@ export const useVideoService = () => {
     }
   }, [dispatch, manager])
 
-  const downloadService = useCallback(async () => {
-    setLoading(true)
-    setDownloadProgress({ percent: 0, status: 'downloading' })
+  const doDownload = useCallback(async () => {
+    dispatch(setVideoServiceDownloadAction({ loading: true, progress: 0, status: 'downloading' }))
     const unsubscribe = window.api.videoService.onDownloadProgress((progress) => {
-      setDownloadProgress(progress)
+      dispatch(setVideoServiceDownloadAction({ loading: true, progress: progress.percent, status: progress.status }))
     })
     try {
       const url = navigator.platform.includes('Mac') ? videoServiceConfig.macUrl : videoServiceConfig.windowsUrl
@@ -79,9 +78,12 @@ export const useVideoService = () => {
       return result
     } finally {
       unsubscribe()
-      setLoading(false)
+      dispatch(setVideoServiceDownloadAction({ loading: false, progress: 0, status: '' }))
     }
-  }, [manager, videoServiceConfig.macUrl, videoServiceConfig.windowsUrl])
+  }, [dispatch, manager, videoServiceConfig.macUrl, videoServiceConfig.windowsUrl])
+
+  const downloadService = doDownload
+  const updateService = doDownload
 
   const getServiceUrl = useCallback(() => {
     return manager.getServiceUrl()
@@ -91,25 +93,6 @@ export const useVideoService = () => {
     await manager.openFolder()
   }, [manager])
 
-  const updateService = useCallback(async () => {
-    setLoading(true)
-    setDownloadProgress({ percent: 0, status: 'downloading' })
-    const unsubscribe = window.api.videoService.onDownloadProgress((progress) => {
-      setDownloadProgress(progress)
-    })
-    try {
-      const url = navigator.platform.includes('Mac') ? videoServiceConfig.macUrl : videoServiceConfig.windowsUrl
-      const result = await manager.download(url)
-      if (result) {
-        setInstalled(true)
-      }
-      return result
-    } finally {
-      unsubscribe()
-      setLoading(false)
-    }
-  }, [manager, videoServiceConfig.macUrl, videoServiceConfig.windowsUrl])
-
   useEffect(() => {
     void checkStatus()
   }, [checkStatus])
@@ -117,9 +100,9 @@ export const useVideoService = () => {
   return {
     videoServiceConfig,
     videoServiceRunning,
-    loading,
+    loading: loading || downloadState.loading,
     installed,
-    downloadProgress,
+    downloadProgress: { percent: downloadState.progress, status: downloadState.status },
     checkStatus,
     startService,
     stopService,

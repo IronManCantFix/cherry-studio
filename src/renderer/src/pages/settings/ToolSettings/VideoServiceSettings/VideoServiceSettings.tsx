@@ -26,11 +26,11 @@ const VideoServiceSettings: FC = () => {
   const { t } = useTranslation()
   const videoServiceConfig =
     useAppSelector((state: RootState) => state.settings.videoService) || defaultVideoServiceConfig
+  const downloadState = useAppSelector((state: RootState) => state.runtime.videoServiceDownload)
   const {
     videoServiceRunning,
     loading,
     installed,
-    downloadProgress,
     startService,
     stopService,
     downloadService,
@@ -116,18 +116,18 @@ const VideoServiceSettings: FC = () => {
 
       {/* Control Section */}
       <ControlSection>
-        {loading && downloadProgress.percent > 0 && (
+        {downloadState.loading && (
           <ProgressWrapper>
             <Progress
-              percent={downloadProgress.percent}
-              status={downloadProgress.percent < 100 ? 'active' : 'success'}
+              percent={downloadState.progress}
+              status={downloadState.progress < 100 ? 'active' : 'success'}
               size="small"
             />
             <StatusText type="secondary">
-              {downloadProgress.status === 'downloading' && t('videoService.status.downloading')}
-              {downloadProgress.status === 'extracting' && t('videoService.status.extracting')}
-              {downloadProgress.status === 'cleaning' && t('videoService.status.cleaning')}
-              {downloadProgress.status === 'done' && t('videoService.status.done')}
+              {downloadState.status === 'downloading' && t('videoService.status.downloading')}
+              {downloadState.status === 'extracting' && t('videoService.status.extracting')}
+              {downloadState.status === 'cleaning' && t('videoService.status.cleaning')}
+              {downloadState.status === 'done' && t('videoService.status.done')}
             </StatusText>
           </ProgressWrapper>
         )}

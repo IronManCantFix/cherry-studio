@@ -80,6 +80,11 @@ export interface RuntimeState {
   apiServerRunning: boolean
   /** Is the video service running */
   videoServiceRunning: boolean
+  videoServiceDownload: {
+    loading: boolean
+    progress: number
+    status: string
+  }
 }
 
 export interface ExportState {
@@ -125,7 +130,12 @@ const initialState: RuntimeState = {
   detectedRegion: null,
   loadingMap: {},
   apiServerRunning: false,
-  videoServiceRunning: false
+  videoServiceRunning: false,
+  videoServiceDownload: {
+    loading: false,
+    progress: 0,
+    status: ''
+  }
 }
 
 const runtimeSlice = createSlice({
@@ -225,6 +235,12 @@ const runtimeSlice = createSlice({
     },
     setVideoServiceRunningAction: (state, action: PayloadAction<boolean>) => {
       state.videoServiceRunning = action.payload
+    },
+    setVideoServiceDownloadAction: (
+      state,
+      action: PayloadAction<{ loading: boolean; progress: number; status: string }>
+    ) => {
+      state.videoServiceDownload = action.payload
     }
   }
 })
@@ -259,7 +275,8 @@ export const {
   // Region detection
   setDetectedRegion,
   setApiServerRunningAction,
-  setVideoServiceRunningAction
+  setVideoServiceRunningAction,
+  setVideoServiceDownloadAction
 } = runtimeSlice.actions
 
 export default runtimeSlice.reducer
