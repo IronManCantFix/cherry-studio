@@ -24,10 +24,19 @@ export class VideoService {
     this.configPath = path.join(this.serviceDir, 'config.yaml')
   }
 
+  private getWinExecPath(): { exePath: string; batPath: string } {
+    return {
+      exePath: path.join(this.serviceDir, 'pixelle-video.exe'),
+      batPath: path.join(this.serviceDir, 'start.bat')
+    }
+  }
+
   async checkInstalled(): Promise<boolean> {
-    const execName = process.platform === 'win32' ? 'start.bat' : 'video-service'
-    const execPath = path.join(this.serviceDir, execName)
-    return fs.existsSync(execPath)
+    if (process.platform === 'win32') {
+      const { exePath, batPath } = this.getWinExecPath()
+      return fs.existsSync(exePath) || fs.existsSync(batPath)
+    }
+    return fs.existsSync(path.join(this.serviceDir, 'video-service'))
   }
 
   private checkPort(port: number): Promise<boolean> {
@@ -92,19 +101,32 @@ export class VideoService {
       }
 
       if (process.platform === 'win32') {
-        const batPath = path.join(this.serviceDir, 'start.bat')
-        // Use a VBS script to run bat completely silently (no DOS window)
-        const vbsContent = `Set objShell = CreateObject("WScript.Shell")
+        const { exePath, batPath } = this.getWinExecPath()
+
+        if (fs.existsSync(exePath)) {
+          // Use pixelle-video.exe directly — no VBS needed
+          logger.info(`Starting with exe: ${exePath}`)
+          this.process = spawn(exePath, [], {
+            cwd: this.serviceDir,
+            detached: true,
+            stdio: 'ignore',
+            windowsHide: true
+          })
+          this.process.unref()
+        } else {
+          // Fallback: run start.bat silently via VBS (no DOS window)
+          const vbsContent = `Set objShell = CreateObject("WScript.Shell")
 objShell.CurrentDirectory = "${this.serviceDir.replace(/\\/g, '\\\\')}"
 objShell.Run """${batPath.replace(/\\/g, '\\\\')}""", 0, False`
-        const vbsPath = path.join(this.serviceDir, '_start_silent.vbs')
-        fs.writeFileSync(vbsPath, vbsContent, 'utf-8')
-        this.process = spawn('wscript.exe', [vbsPath], {
-          detached: true,
-          stdio: 'ignore',
-          windowsHide: true
-        })
-        this.process.unref()
+          const vbsPath = path.join(this.serviceDir, '_start_silent.vbs')
+          fs.writeFileSync(vbsPath, vbsContent, 'utf-8')
+          this.process = spawn('wscript.exe', [vbsPath], {
+            detached: true,
+            stdio: 'ignore',
+            windowsHide: true
+          })
+          this.process.unref()
+        }
       } else {
         const execPath = path.join(this.serviceDir, 'video-service')
         this.process = spawn(execPath, [], {
@@ -155,13 +177,24 @@ objShell.Run """${batPath.replace(/\\/g, '\\\\')}""", 0, False`
           logger.info(`Port 8501 PIDs: ${[...pids].join(', ') || 'none'}`)
 
           if (pids.size === 0) {
-            // Fallback: try to find by process name related to video-service
+            // Fallback: try to find by process name
             try {
-              const tasklist = execSync('tasklist /FI "IMAGENAME eq python*" /FO CSV /NH', {
+              const tasklist = execSync('tasklist /FI "IMAGENAME eq pixelle-video.exe" /FO CSV /NH', {
                 encoding: 'utf-8',
                 timeout: 5000
               })
-              logger.info(`Python processes: ${tasklist.substring(0, 500)}`)
+              const csvLines = tasklist
+                .trim()
+                .split('\n')
+                .filter((l) => !l.includes('INFO:'))
+              for (const line of csvLines) {
+                const parts = line.replace(/"/g, '').split(',')
+                const pid = parts[1]?.trim()
+                if (pid && /^\d+$/.test(pid)) {
+                  pids.add(pid)
+                }
+              }
+              logger.info(`pixelle-video.exe PIDs: ${[...pids].join(', ') || 'none'}`)
             } catch {
               // ignore
             }
@@ -320,9 +353,14 @@ objShell.Run """${batPath.replace(/\\/g, '\\\\')}""", 0, False`
 
   async updateModelConfig(baseUrl: string, apiKey: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const configPath = path.join(this.serviceDir, 'Pixelle-Video', 'config.yaml')
-      if (!fs.existsSync(configPath)) {
-        return { success: false, error: 'Config file not found: ' + configPath }
+      // config.yaml is either next to pixelle-video.exe (serviceDir root) or in Pixelle-Video/ subdirectory (bat)
+      const candidates = [
+        path.join(this.serviceDir, 'config.yaml'),
+        path.join(this.serviceDir, 'Pixelle-Video', 'config.yaml')
+      ]
+      const configPath = candidates.find((p) => fs.existsSync(p))
+      if (!configPath) {
+        return { success: false, error: 'Config file not found in: ' + candidates.join(', ') }
       }
 
       let content = fs.readFileSync(configPath, 'utf-8')
