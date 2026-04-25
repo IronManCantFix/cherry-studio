@@ -44,6 +44,7 @@ import { windowService } from './services/WindowService'
 import { initWebviewHotkeys } from './services/WebviewService'
 import { runAsyncFunction } from './utils'
 import { isOvmsSupported } from './services/OvmsManager'
+import { getVideoService } from './services/VideoService'
 import { extractRtkBinaries } from './utils/rtk'
 
 const logger = loggerService.withContext('MainEntry')
@@ -284,6 +285,13 @@ if (!app.requestSingleInstanceLock()) {
       selectionService.quit()
     }
 
+    // Stop video service synchronously before app exits
+    try {
+      getVideoService().stopSync()
+    } catch {
+      // ignore — may not be loaded yet
+    }
+
     lanTransferClientService.dispose()
     localTransferService.dispose()
   })
@@ -306,8 +314,7 @@ if (!app.requestSingleInstanceLock()) {
       await openClawService.stopGateway()
       await mcpService.cleanup()
       await apiServerService.stop()
-      const { getVideoService } = await import('./services/VideoService')
-      await getVideoService().stop()
+      // VideoService is already stopped synchronously in before-quit
     } catch (error) {
       logger.warn('Error cleaning up services:', error as Error)
     }

@@ -4,6 +4,7 @@ import './ThemeService'
 import { is } from '@electron-toolkit/utils'
 import { loggerService } from '@logger'
 import { isDev, isLinux, isMac, isWin } from '@main/constant'
+import { getVideoService } from '@main/services/VideoService'
 import { getFilesDir } from '@main/utils/file'
 import { getWindowsBackgroundMaterial } from '@main/utils/windowUtil'
 import { MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH } from '@shared/config/constant'
@@ -393,6 +394,11 @@ export class WindowService {
         // 如果是Windows或Linux，直接退出
         // mac按照系统默认行为，不退出
         if (isWin || isLinux) {
+          try {
+            getVideoService().stopSync()
+          } catch {
+            // ignore
+          }
           return app.quit()
         }
       }

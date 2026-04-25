@@ -1,7 +1,7 @@
 import { IpcChannel } from '@shared/IpcChannel'
 import AdmZip from 'adm-zip'
 import type { ChildProcess } from 'child_process'
-import { spawn } from 'child_process'
+import { execSync, spawn } from 'child_process'
 import type { IpcMainInvokeEvent } from 'electron'
 import { BrowserWindow, ipcMain, shell } from 'electron'
 import * as fs from 'fs'
@@ -153,14 +153,12 @@ objShell.Run """${batPath.replace(/\\/g, '\\\\')}""", 0, False`
     }
   }
 
-  async stop(): Promise<{ success: boolean; error?: string }> {
-    logger.info('stop() called')
+  /**
+   * Synchronous stop — safe to call from before-quit where async is not guaranteed to complete.
+   */
+  stopSync(): void {
     try {
-      const child_process = await import('child_process')
-      const execSync = child_process.execSync
-
       if (process.platform === 'win32') {
-        // Get all listening ports and find 8501
         try {
           const netstatOutput = execSync('netstat -ano', { encoding: 'utf-8', timeout: 5000 })
           const lines = netstatOutput.split('\n')
@@ -174,10 +172,8 @@ objShell.Run """${batPath.replace(/\\/g, '\\\\')}""", 0, False`
               }
             }
           }
-          logger.info(`Port 8501 PIDs: ${[...pids].join(', ') || 'none'}`)
 
           if (pids.size === 0) {
-            // Fallback: try to find by process name
             try {
               const tasklist = execSync('tasklist /FI "IMAGENAME eq pixelle-video.exe" /FO CSV /NH', {
                 encoding: 'utf-8',
@@ -194,7 +190,6 @@ objShell.Run """${batPath.replace(/\\/g, '\\\\')}""", 0, False`
                   pids.add(pid)
                 }
               }
-              logger.info(`pixelle-video.exe PIDs: ${[...pids].join(', ') || 'none'}`)
             } catch {
               // ignore
             }
@@ -203,32 +198,33 @@ objShell.Run """${batPath.replace(/\\/g, '\\\\')}""", 0, False`
           for (const pid of pids) {
             try {
               execSync(`taskkill /PID ${pid} /T /F`, { encoding: 'utf-8', timeout: 5000 })
-              logger.info(`Killed PID ${pid}`)
-            } catch (e: any) {
-              logger.error(`taskkill PID ${pid} failed: ${e.message}`)
+            } catch {
+              // ignore
             }
           }
-        } catch (e: any) {
-          logger.error(`netstat failed: ${e.message}`)
+        } catch {
+          // ignore
         }
       } else {
         try {
           const pid = execSync('lsof -ti :8501 -sTCP:LISTEN', { encoding: 'utf-8', timeout: 5000 }).trim()
           if (pid) {
             execSync(`kill -9 ${pid}`, { timeout: 5000 })
-            logger.info(`Killed PID ${pid}`)
           }
-        } catch (e: any) {
-          logger.error(`lsof failed: ${e.message}`)
+        } catch {
+          // ignore
         }
       }
       this.process = null
-      logger.info(`VideoService stopped`)
-      return { success: true }
+      logger.info('VideoService stopped (sync)')
     } catch (error: any) {
-      logger.error('Failed to stop VideoService:', error)
-      return { success: false, error: error.message }
+      logger.error('Failed to stop VideoService (sync):', error)
     }
+  }
+
+  async stop(): Promise<{ success: boolean; error?: string }> {
+    this.stopSync()
+    return { success: true }
   }
 
   private sendProgress(percent: number, status: string) {
