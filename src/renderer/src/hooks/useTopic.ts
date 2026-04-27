@@ -169,7 +169,7 @@ export const autoRenameTopic = async (assistant: Assistant, topicId: string) => 
     if (topic && topic.name === i18n.t('chat.default.topic.name') && topic.messages.length >= 2) {
       startTopicRenaming(topicId)
       try {
-        const { text: summaryText, error } = await fetchMessagesSummary({ messages: topic.messages })
+        const { text: summaryText, error } = await fetchMessagesSummary({ messages: topic.messages, assistant })
         if (summaryText) {
           applyTopicName(summaryText)
         } else {

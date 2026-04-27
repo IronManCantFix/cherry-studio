@@ -409,12 +409,14 @@ export async function fetchImageGeneration({
 }
 
 export async function fetchMessagesSummary({
-  messages
+  messages,
+  assistant
 }: {
   messages: Message[]
+  assistant?: Assistant
 }): Promise<{ text: string | null; error?: string }> {
   let prompt = getStoreSetting('topicNamingPrompt') || i18n.t('prompts.title')
-  const model = getQuickModel()
+  const model = assistant?.model || getQuickModel()
 
   if (prompt && containsSupportedVariables(prompt)) {
     prompt = await replacePromptVariables(prompt, model.name)
