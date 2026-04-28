@@ -4,10 +4,8 @@ import type { RootState } from '@renderer/store'
 const logger = loggerService.withContext('VideoServiceManager')
 
 class VideoServiceManagerClass {
-  private getState: () => RootState
-
-  constructor(getState: () => RootState) {
-    this.getState = getState
+  constructor(_getState: () => RootState) {
+    // getState reserved for future use
   }
 
   async checkInstalled(): Promise<boolean> {

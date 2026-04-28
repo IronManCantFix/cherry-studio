@@ -85,7 +85,7 @@ export class VideoService {
     return false
   }
 
-  async start(port: number, baseUrl?: string, apiKey?: string): Promise<{ success: boolean; error?: string }> {
+  async start(_port: number, baseUrl?: string, apiKey?: string): Promise<{ success: boolean; error?: string }> {
     try {
       const isInstalled = await this.checkInstalled()
       if (!isInstalled) {
