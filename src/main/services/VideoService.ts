@@ -362,12 +362,15 @@ objShell.Run """${batPath.replace(/\\/g, '\\\\')}""", 0, False`
       let content = fs.readFileSync(configPath, 'utf-8')
       logger.info(`Config before update:\n${content}`)
 
+      // Ensure base_url ends with /v1
+      const urlWithSuffix = baseUrl.replace(/\/+$/, '').replace(/\/v1\/?$/, '') + '/v1'
+
       // Replace llm section values
       content = content.replace(/^(\s*api_key:\s*).*$/m, `$1'${apiKey}'`)
-      content = content.replace(/^(\s*base_url:\s*).*$/m, `$1'${baseUrl}'`)
+      content = content.replace(/^(\s*base_url:\s*).*$/m, `$1'${urlWithSuffix}'`)
 
       fs.writeFileSync(configPath, content, 'utf-8')
-      logger.info(`Updated model config: base_url=${baseUrl}, api_key=${apiKey}`)
+      logger.info(`Updated model config: base_url=${urlWithSuffix}, api_key=${apiKey}`)
       return { success: true }
     } catch (error: any) {
       logger.error('Failed to update model config:', error)
