@@ -54,8 +54,8 @@ stages:
         strategy:
           retry: '0'
           resource:
-            cpu: 1
-            memory: 2
+            cpu: 2
+            memory: 4
   - name: stage-build-macos
     displayName: macOS 构建
     strategy: naturally
