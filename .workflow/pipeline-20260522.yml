@@ -16,8 +16,7 @@ stages:
         nodeVersion: 24.5.0
         commands:
           - '# 安装 pnpm'
-          - corepack enable
-          - corepack prepare pnpm@10.27.0 --activate
+          - npm install -g pnpm@10.27.0
           - ''
           - '# 设置 NPM 源，提升安装速度'
           - pnpm config set registry https://registry.npmmirror.com
@@ -50,8 +49,7 @@ stages:
         nodeVersion: 24.5.0
         commands:
           - '# 安装 pnpm'
-          - corepack enable
-          - corepack prepare pnpm@10.27.0 --activate
+          - npm install -g pnpm@10.27.0
           - ''
           - '# 设置 NPM 源，提升安装速度'
           - pnpm config set registry https://registry.npmmirror.com
