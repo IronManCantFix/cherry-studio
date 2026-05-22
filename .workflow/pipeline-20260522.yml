@@ -13,7 +13,7 @@ stages:
       - step: build@nodejs
         name: build_windows
         displayName: Windows 安装包构建
-        nodeVersion: 24.5.0
+        nodeVersion: 24.13.0
         commands:
           - '# 查找项目目录'
           - pwd
