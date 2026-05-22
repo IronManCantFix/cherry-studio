@@ -15,14 +15,19 @@ stages:
         displayName: Windows 安装包构建
         nodeVersion: 24.5.0
         commands:
+          - '# 检查环境'
+          - node -v
+          - npm -v
+          - ''
           - '# 安装 pnpm'
           - npm install -g pnpm@10.27.0
+          - pnpm --version
           - ''
           - '# 设置 NPM 源，提升安装速度'
           - pnpm config set registry https://registry.npmmirror.com
           - ''
           - '# 安装依赖'
-          - pnpm install --frozen-lockfile
+          - pnpm install --no-frozen-lockfile
           - ''
           - '# 构建 Windows 安装包 (x64 + arm64)'
           - pnpm build:win
@@ -48,14 +53,19 @@ stages:
         displayName: macOS 安装包构建
         nodeVersion: 24.5.0
         commands:
+          - '# 检查环境'
+          - node -v
+          - npm -v
+          - ''
           - '# 安装 pnpm'
           - npm install -g pnpm@10.27.0
+          - pnpm --version
           - ''
           - '# 设置 NPM 源，提升安装速度'
           - pnpm config set registry https://registry.npmmirror.com
           - ''
           - '# 安装依赖'
-          - pnpm install --frozen-lockfile
+          - pnpm install --no-frozen-lockfile
           - ''
           - '# 构建 macOS 安装包 (arm64 + x64)'
           - pnpm build:mac
