@@ -26,7 +26,7 @@ export const FUNCTION_CALLING_MODELS = [
   'glm-5(?:-[\\w-]+)?',
   'learnlm(?:-[\\w-]+)?',
   'gemini(?:-[\\w-]+)?', // 提前排除了gemini的嵌入模型
-  'gemma-4(?:-[\\w-]+)?',
+  'gemma-?4(?:[-.\\w]+)?',
   'grok-3(?:-[\\w-]+)?',
   'grok-4(?:-[\\w-]+)?',
   'doubao-seed-1[.-][68](?:-[\\w-]+)?',
@@ -36,6 +36,7 @@ export const FUNCTION_CALLING_MODELS = [
   'ling-\\w+(?:-[\\w-]+)?',
   'ring-\\w+(?:-[\\w-]+)?',
   'minimax-m2(?:\\.\\d+)?(?:-[\\w-]+)?',
+  'mimo-v2\\.5(?:-pro)?(?!-)',
   'mimo-v2-flash',
   'mimo-v2-pro',
   'mimo-v2-omni',
@@ -55,7 +56,8 @@ const FUNCTION_CALLING_EXCLUDED_MODELS = [
   'gemini-2.5-flash-image(?:-[\\w-]+)?',
   'gemini-2.0-flash-preview-image-generation',
   'gemini-3(?:\\.\\d+)?-pro-image(?:-[\\w-]+)?',
-  'deepseek-v3.2-speciale'
+  'deepseek-v3.2-speciale',
+  'deepseek-r1(?:[-:][\\w.-]+)?'
 ]
 
 export const FUNCTION_CALLING_REGEX = new RegExp(

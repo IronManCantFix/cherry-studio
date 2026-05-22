@@ -18,7 +18,6 @@ function syncSchedulerIfNeeded(agentId: string, agent: { configuration?: unknown
   if (!config.heartbeat_enabled && !config.scheduler_enabled) return
 
   void schedulerService.syncScheduler()
-  void channelManager.syncAgent(agentId)
   schedulerService.ensureHeartbeatTask(agentId, config.heartbeat_interval ?? 30).catch((err) => {
     logger.warn('Failed to sync heartbeat task', {
       agentId,
@@ -208,7 +207,9 @@ export const createAgent = async (req: Request, res: Response): Promise<Response
  */
 export const listAgents = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20
+    // Agents are consumed as a flat list across the UI (sidebar, dropdowns, length checks),
+    // so the listing endpoint defaults to the schema max instead of the generic 20-page default.
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 1000
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0
     const sortBy = (req.query.sortBy as 'created_at' | 'updated_at' | 'name' | 'sort_order') || 'sort_order'
     const orderBy = (req.query.orderBy as 'asc' | 'desc') || (sortBy === 'sort_order' ? 'asc' : 'desc')
@@ -598,8 +599,8 @@ export const deleteAgent = async (req: Request, res: Response): Promise<Response
       })
     }
 
-    // Sync channels after deletion so syncAgent finds no agent and disconnects adapters
-    void channelManager.syncAgent(agentId)
+    // Disconnect all channel adapters for the deleted agent
+    void channelManager.disconnectAgent(agentId)
 
     logger.info('Agent deleted', { agentId })
     return res.status(204).send()
