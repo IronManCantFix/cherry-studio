@@ -1,36 +1,73 @@
 version: '1.0'
 name: pipeline-20260522
-displayName: pipeline-20260522
+displayName: Cherry Studio Build Pipeline
 triggers:
-  trigger: auto
-  push:
-    branches:
-      prefix:
-        - ''
+  trigger: manual
 stages:
-  - name: stage-2c93b355
-    displayName: 未命名
+  - name: stage-build-windows
+    displayName: Windows 构建
     strategy: naturally
-    trigger: auto
+    trigger: manual
     executor: []
     steps:
       - step: build@nodejs
-        name: build_nodejs
-        displayName: Nodejs 构建
+        name: build_windows
+        displayName: Windows 安装包构建
         nodeVersion: 24.5.0
         commands:
-          - '# 设置NPM源，提升安装速度'
-          - npm config set registry https://registry.npmmirror.com
+          - '# 安装 pnpm'
+          - corepack enable
+          - corepack prepare pnpm@10.27.0 --activate
           - ''
-          - '# 执行编译命令'
-          - npm install && npm run build
+          - '# 设置 NPM 源，提升安装速度'
+          - pnpm config set registry https://registry.npmmirror.com
+          - ''
+          - '# 安装依赖'
+          - pnpm install --frozen-lockfile
+          - ''
+          - '# 构建 Windows 安装包 (x64 + arm64)'
+          - pnpm build:win
         artifacts:
-          - name: BUILD_ARTIFACT
+          - name: WINDOWS_ARTIFACT
             path:
-              - ./dist
+              - ./dist/*.exe
+              - ./dist/*.zip
         caches:
-          - ~/.npm
-          - ~/.yarn
+          - ~/.pnpm-store
+        notify: []
+        strategy:
+          retry: '0'
+
+  - name: stage-build-macos
+    displayName: macOS 构建
+    strategy: naturally
+    trigger: manual
+    executor: []
+    steps:
+      - step: build@nodejs
+        name: build_macos
+        displayName: macOS 安装包构建
+        nodeVersion: 24.5.0
+        commands:
+          - '# 安装 pnpm'
+          - corepack enable
+          - corepack prepare pnpm@10.27.0 --activate
+          - ''
+          - '# 设置 NPM 源，提升安装速度'
+          - pnpm config set registry https://registry.npmmirror.com
+          - ''
+          - '# 安装依赖'
+          - pnpm install --frozen-lockfile
+          - ''
+          - '# 构建 macOS 安装包 (arm64 + x64)'
+          - pnpm build:mac
+        artifacts:
+          - name: MACOS_ARTIFACT
+            path:
+              - ./dist/*.dmg
+              - ./dist/*.zip
+        caches:
+          - ~/.pnpm-store
         notify: []
         strategy:
           retry: '0'
