@@ -1,6 +1,6 @@
 version: '1.0'
 name: pipeline-20260522
-displayName: Cherry Studio Build Pipeline
+displayName: Cherry-Studio-Build-Pipeline
 triggers:
   trigger: manual
 stages:
@@ -41,7 +41,9 @@ stages:
         notify: []
         strategy:
           retry: '0'
-
+          resource:
+            cpu: 1
+            memory: 2
   - name: stage-build-macos
     displayName: macOS 构建
     strategy: naturally
@@ -79,3 +81,6 @@ stages:
         notify: []
         strategy:
           retry: '0'
+          resource:
+            cpu: 1
+            memory: 2
