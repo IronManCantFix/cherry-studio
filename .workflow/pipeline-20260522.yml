@@ -2,7 +2,7 @@ version: '1.0'
 name: pipeline-20260522
 displayName: Cherry-Studio-Build-Pipeline
 triggers:
-  trigger: manual
+  trigger: auto
 stages:
   - name: stage-build-windows
     displayName: Windows 构建
@@ -65,7 +65,7 @@ stages:
       - step: build@nodejs
         name: build_macos
         displayName: macOS 安装包构建
-        nodeVersion: 24.5.0
+        nodeVersion: 24.13.0
         commands:
           - '# 查找项目目录'
           - pwd
