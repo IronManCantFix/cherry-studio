@@ -21,6 +21,8 @@ const assistantProvider = {
 }
 
 const completions = vi.fn()
+const generateImage = vi.fn()
+const editImage = vi.fn()
 const getActualProvider = vi.fn()
 const aiProviderConstructor = vi.fn()
 
@@ -109,8 +111,42 @@ vi.mock('../../aiCore', () => ({
     completions(...args: any[]) {
       return completions(...args)
     }
+
+    generateImage(...args: any[]) {
+      return generateImage(...args)
+    }
+
+    editImage(...args: any[]) {
+      return editImage(...args)
+    }
   }
 }))
+
+describe('fetchImageGeneration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('emits base64 image chunks for OpenAI b64_json results', async () => {
+    const { fetchImageGeneration } = await import('../ApiService')
+    const { ChunkType } = await import('@renderer/types/chunk')
+    const rawPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='
+    generateImage.mockResolvedValue([rawPngBase64])
+    const onChunkReceived = vi.fn()
+    const assistant = { id: 'assistant-1', model: assistantModel, settings: {}, prompt: '' } as Assistant
+    const messages = [{ id: 'user-1', role: 'user', topicId: 'topic-1', content: 'Draw a cat' }] as unknown as Message[]
+
+    await fetchImageGeneration({ messages, assistant, onChunkReceived })
+
+    expect(generateImage).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'assistant-model', prompt: 'Draw a cat', imageSize: '1024x1024', batchSize: 1 })
+    )
+    expect(onChunkReceived).toHaveBeenCalledWith({
+      type: ChunkType.IMAGE_COMPLETE,
+      image: { type: 'base64', images: [rawPngBase64] }
+    })
+  })
+})
 
 describe('fetchMessagesSummary', () => {
   beforeEach(() => {

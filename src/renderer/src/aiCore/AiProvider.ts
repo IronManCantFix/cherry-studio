@@ -7,6 +7,8 @@ import type { StartSpanParams } from '@renderer/trace/types/ModelSpanEntity'
 import type { Assistant, EditImageParams, GenerateImageParams, Model, Provider } from '@renderer/types'
 import type { StreamTextParams } from '@renderer/types/aiCoreTypes'
 import { getLowerBaseModelName } from '@renderer/utils'
+import { detectImageMimeFromBase64, fetchImageAsDataUrl } from '@renderer/utils/image'
+import { isOpenAIImageProvider } from '@renderer/utils/provider'
 import { buildClaudeCodeSystemModelMessage } from '@shared/anthropic'
 
 import AiSdkToChunkAdapter from './chunk/AiSdkToChunkAdapter'
@@ -371,20 +373,177 @@ export default class AiProvider {
 
   /**
    * 生成图像
-   * 使用现代化 AI SDK 实现，不再 fallback 到 legacy
+   * 对 OpenAI / NewAPI 类型走直连 fetch，避开 AI SDK 对 gpt-image-1/dall-e 的兼容性陷阱；
+   * 其他 provider 继续走 AI SDK。
    */
   public async generateImage(params: GenerateImageParams): Promise<string[]> {
+    if (isOpenAIImageProvider(this.actualProvider)) {
+      return await this.directOpenAIGenerateImage(params)
+    }
     await this.ensureConfig(params.model)
     return await this.modernGenerateImage(params, this.config!)
   }
 
   /**
    * 编辑图像 - 基于输入图像和文本提示生成新图像
-   * 内部使用 AI SDK 的 generateImage，通过 prompt.images 参数实现编辑功能
    */
   public async editImage(params: EditImageParams): Promise<string[]> {
+    if (isOpenAIImageProvider(this.actualProvider)) {
+      return await this.directOpenAIEditImage(params)
+    }
     await this.ensureConfig(params.model)
     return await this.modernEditImage(params, this.config!)
+  }
+
+  /**
+   * 直接 fetch OpenAI 兼容的 /v1/images/generations
+   * - gpt-image-1 不支持 response_format 参数
+   * - dall-e 系列要求 response_format=b64_json 拿 base64
+   */
+  private async directOpenAIGenerateImage(params: GenerateImageParams): Promise<string[]> {
+    const { model, prompt, imageSize, batchSize, signal } = params
+    const url = this.buildOpenAIImageUrl('generations')
+    // OpenAI 官方域名 + gpt-image-1 不接受 response_format；第三方代理需要显式传递才会返回 b64_json
+    const isOfficialOpenAI = /(^|\/\/)api\.openai\.com/i.test(this.actualProvider.apiHost || '')
+    const supportsResponseFormat = !(isOfficialOpenAI && /gpt-image/i.test(model))
+
+    const body: Record<string, unknown> = {
+      model,
+      prompt: typeof prompt === 'string' ? prompt : '',
+      size: imageSize || '1024x1024',
+      n: batchSize || 1
+    }
+    if (supportsResponseFormat) {
+      body.response_format = 'b64_json'
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.getApiKey()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body),
+      ...(signal && { signal })
+    })
+
+    return await this.parseOpenAIImageResponse(response)
+  }
+
+  /**
+   * 直接 fetch OpenAI 兼容的 /v1/images/edits
+   * editImage 走 multipart/form-data
+   */
+  private async directOpenAIEditImage(params: EditImageParams): Promise<string[]> {
+    const { model, prompt, inputImages, imageSize, signal } = params
+    const url = this.buildOpenAIImageUrl('edits')
+    const isOfficialOpenAI = /(^|\/\/)api\.openai\.com/i.test(this.actualProvider.apiHost || '')
+    const supportsResponseFormat = !(isOfficialOpenAI && /gpt-image/i.test(model))
+
+    const formData = new FormData()
+    formData.append('model', model)
+    formData.append('prompt', prompt || '')
+    formData.append('size', imageSize || '1024x1024')
+    if (supportsResponseFormat) {
+      formData.append('response_format', 'b64_json')
+    }
+    for (const img of inputImages || []) {
+      formData.append('image', this.toImageBlob(img), 'image.png')
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.getApiKey()}` },
+      body: formData,
+      ...(signal && { signal })
+    })
+
+    return await this.parseOpenAIImageResponse(response)
+  }
+
+  /**
+   * 构造 OpenAI 兼容图像接口的完整 URL
+   */
+  private buildOpenAIImageUrl(kind: 'generations' | 'edits'): string {
+    const base = (this.actualProvider.apiHost || '').replace(/\/+$/, '').replace(/\/v1$/, '')
+    if (this.actualProvider.id === 'aionly') {
+      return `${base}/openai/v1/images/${kind}`
+    }
+    return `${base}/v1/images/${kind}`
+  }
+
+  /**
+   * 解析 OpenAI / 兼容服务返回的图像数据
+   * 支持 data[].b64_json、data[].url 以及万相 metadata.output.choices 格式
+   */
+  private async parseOpenAIImageResponse(response: Response): Promise<string[]> {
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '')
+      let message = errText
+      try {
+        const parsed = JSON.parse(errText) as { error?: { message?: string } }
+        if (parsed?.error?.message) message = parsed.error.message
+      } catch {
+        // ignore
+      }
+      throw new Error(message || `Image generation failed: ${response.status}`)
+    }
+
+    const data = (await response.json()) as {
+      data?: Array<{ b64_json?: string; url?: string }>
+      metadata?: { output?: { choices?: Array<{ message?: { content?: Array<{ image?: string }> } }> } }
+    }
+
+    const images: string[] = []
+    if (data?.metadata?.output?.choices?.length) {
+      for (const choice of data.metadata.output.choices) {
+        for (const item of choice?.message?.content || []) {
+          if (item.image) images.push(item.image)
+        }
+      }
+    } else if (Array.isArray(data?.data)) {
+      for (const item of data.data) {
+        if (item.b64_json) {
+          const mime = detectImageMimeFromBase64(item.b64_json)
+          images.push(`data:${mime};base64,${item.b64_json}`)
+        } else if (item.url) {
+          // 部分代理只返回内部域名 URL，渲染器无法直接加载；尝试 fetch 转 base64，失败时回退到原 URL
+          try {
+            const dataUrl = await fetchImageAsDataUrl(item.url)
+            images.push(dataUrl)
+          } catch (e) {
+            logger.warn(
+              `[parseOpenAIImageResponse] fetch url as base64 failed, fallback to raw url: ${item.url}`,
+              e as Error
+            )
+            images.push(item.url)
+          }
+        }
+      }
+    }
+
+    if (images.length === 0) {
+      logger.warn('[parseOpenAIImageResponse] response contained no images', { keys: Object.keys(data || {}) })
+    }
+    return images
+  }
+
+  /**
+   * 将输入图像（base64/data URL 字符串或 Buffer/Uint8Array）转为 Blob，用于 FormData 上传
+   */
+  private toImageBlob(input: Buffer | Uint8Array | string): Blob {
+    if (typeof input !== 'string') {
+      return new Blob([Uint8Array.from(input)], { type: 'image/png' })
+    }
+    const commaIdx = input.indexOf(',')
+    const header = commaIdx >= 0 ? input.slice(0, commaIdx) : ''
+    const payload = commaIdx >= 0 ? input.slice(commaIdx + 1) : input
+    const mimeMatch = /data:([^;]+);base64/i.exec(header)
+    const mime = mimeMatch?.[1] || 'image/png'
+    const binary = atob(payload)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    return new Blob([bytes], { type: mime })
   }
 
   /**
@@ -454,6 +613,12 @@ export default class AiProvider {
           images.push(`data:${image.mediaType || 'image/png'};base64,${image.base64}`)
         }
       }
+    }
+    if (images.length === 0 && result.images && result.images.length > 0) {
+      logger.warn('[convertImageResult] Images returned but no base64 data found', {
+        imageCount: result.images.length,
+        imageKeys: result.images.map((img) => Object.keys(img))
+      })
     }
     return images
   }

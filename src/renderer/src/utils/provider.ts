@@ -1,3 +1,4 @@
+import { isDedicatedImageGenerationModel } from '@renderer/config/models/vision'
 import type { AzureOpenAIProvider, ProviderType } from '@renderer/types'
 import { isSystemProvider, type Provider, type SystemProviderId, SystemProviderIds } from '@renderer/types'
 import { isAzureOpenAIProvider } from '@shared/aiCore/provider/utils'
@@ -141,6 +142,10 @@ export const isNewApiProvider = (provider: Provider) => {
   return ['new-api', 'cherryin', 'aionly'].includes(provider.id) || ['new-api', 'new-api-image'].includes(provider.type)
 }
 
+export const isNewApiImageProvider = (provider: Provider) => {
+  return provider.type === 'new-api-image'
+}
+
 export const isVolcengineImageProvider = (provider: Provider) => {
   return provider.type === 'volcengine-image'
 }
@@ -151,11 +156,47 @@ export const isVolcengineImageProvider = (provider: Provider) => {
  * @returns {boolean} 是否为 OpenAI 兼容提供商
  */
 export function isOpenAICompatibleProvider(provider: Provider): boolean {
-  return ['openai', 'new-api', 'new-api-image', 'volcengine-image', 'mistral'].includes(provider.type)
+  const providerType = String(provider.type)
+  return ['openai', 'openai-compatible', 'new-api', 'new-api-image', 'volcengine-image', 'mistral'].includes(
+    providerType
+  )
 }
 
 export function isOpenAIProvider(provider: Provider): boolean {
-  return provider.type === 'openai-response'
+  const providerType = String(provider.type)
+  return providerType === 'openai' || providerType === 'openai-response' || providerType === 'openai-compatible'
+}
+
+/**
+ * 判断是否支持 OpenAI 图片生成接口的提供商
+ */
+export function isOpenAIImageProvider(provider: Provider): boolean {
+  return isOpenAIProvider(provider) || isNewApiProvider(provider)
+}
+
+/**
+ * 判断 provider 是否可以在绘图页作为 OpenAI 图片接口使用。
+ * 普通 OpenAI provider 在设置页没有图像端点类型配置，不进入绘图页。
+ */
+export function isPaintingOpenAIImageProvider(provider: Provider): boolean {
+  if (provider.enabled === false) return false
+  if (isNewApiImageProvider(provider)) return true
+  return isNewApiProvider(provider) && hasPaintingImageModel(provider)
+}
+
+/**
+ * 判断 provider 是否拥有任何可用于绘图的图像生成模型。
+ * 用于绘图模块筛选只显示"支持图像生成"的 provider。
+ * - NewApi: 至少一个模型 endpoint_type === 'image-generation'
+ * - 通用: 至少一个 isDedicatedImageGenerationModel，或 id 命中 gpt-image / dall-e
+ */
+export function hasPaintingImageModel(provider: Provider): boolean {
+  if (!provider.models || provider.models.length === 0) return false
+  return provider.models.some((m) => {
+    if ((m as { endpoint_type?: string }).endpoint_type === 'image-generation') return true
+    if (isDedicatedImageGenerationModel(m)) return true
+    return /(?:gpt-image|dall-e)/i.test(m.id)
+  })
 }
 
 export function isAwsBedrockProvider(provider: Provider): boolean {

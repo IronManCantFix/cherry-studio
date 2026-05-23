@@ -55,7 +55,9 @@ const ProviderSelect: FC<ProviderSelectProps> = ({ provider, options, onChange, 
   return (
     <Select
       value={provider.id}
-      onChange={onChange}
+      onChange={(val) => {
+        onChange(val)
+      }}
       style={{ width: '100%', ...style }}
       className={className}
       options={providerOptions}

@@ -290,12 +290,13 @@ vi.mock('@renderer/utils', () => ({
 
 interface MockTopicsState {
   entities: Record<string, unknown>
+  activeTopicId: string
 }
 
 const reducer = combineReducers({
   messages: messagesSlice.reducer,
   messageBlocks: messageBlocksSlice.reducer,
-  topics: (state: MockTopicsState = { entities: {} }) => state
+  topics: (state: MockTopicsState = { entities: {}, activeTopicId: 'test-topic-id' }) => state
 })
 
 const createMockStore = () => {
@@ -328,7 +329,7 @@ const processChunks = async (chunks: Chunk[], callbacks: ReturnType<typeof creat
       }
 
       if (chunk) {
-        streamProcessor(chunk)
+        await streamProcessor(chunk)
 
         // Add small delay to simulate real streaming
         await new Promise((resolve) => setTimeout(resolve, 10))
@@ -580,6 +581,41 @@ describe('streamCallback Integration Tests', () => {
     expect(imageBlock).toBeDefined()
     expect(imageBlock?.file).toEqual(mockSavedFile)
     expect(imageBlock?.url).toBe('file:///mock/path/mock-image-id.png')
+    expect(imageBlock?.status).toBe(MessageBlockStatus.SUCCESS)
+  })
+
+  it('should normalize raw base64 image generation results before saving', async () => {
+    const callbacks = createMockCallbacks(mockAssistantMsgId, mockTopicId, mockAssistant, dispatch, getState)
+    const rawJpegBase64 =
+      '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAQABADASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAQMEB//EACMQAAIBAwMEAwAAAAAAAAAAAAECAwAEEQUSIQYxQVExUYH/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AM/8A//Z'
+
+    const chunks: Chunk[] = [
+      { type: ChunkType.LLM_RESPONSE_CREATED },
+      { type: ChunkType.IMAGE_CREATED },
+      {
+        type: ChunkType.IMAGE_COMPLETE,
+        image: {
+          type: 'base64',
+          images: [rawJpegBase64]
+        }
+      },
+      { type: ChunkType.BLOCK_COMPLETE }
+    ]
+
+    await processChunks(chunks, callbacks)
+
+    const normalizedDataUrl = `data:image/jpeg;base64,${rawJpegBase64}`
+    expect(window.api.file.saveBase64Image).toHaveBeenCalledWith(normalizedDataUrl)
+
+    const state = getState()
+    const blocks = Object.values(state.messageBlocks.entities)
+    const imageBlock = blocks.find((block) => block.type === MessageBlockType.IMAGE)
+    expect(imageBlock).toBeDefined()
+    expect(imageBlock?.metadata?.generateImageResponse).toEqual({
+      type: 'base64',
+      images: [normalizedDataUrl]
+    })
+    expect(imageBlock?.file).toEqual(mockSavedFile)
     expect(imageBlock?.status).toBe(MessageBlockStatus.SUCCESS)
   })
 

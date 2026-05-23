@@ -6,6 +6,7 @@ import { Navbar, NavbarCenter, NavbarRight } from '@renderer/components/app/Navb
 import Scrollbar from '@renderer/components/Scrollbar'
 import TranslateButton from '@renderer/components/TranslateButton'
 import { isMac } from '@renderer/config/constant'
+import { isDedicatedImageGenerationModel } from '@renderer/config/models/vision'
 import { getProviderLogo, PROVIDER_URLS } from '@renderer/config/providers'
 import { LanguagesEnum } from '@renderer/config/translate'
 import { useTheme } from '@renderer/context/ThemeProvider'
@@ -26,9 +27,14 @@ import { translateText } from '@renderer/services/TranslateService'
 import { useAppDispatch } from '@renderer/store'
 import { setGenerating } from '@renderer/store/runtime'
 import type { PaintingAction, PaintingsState } from '@renderer/types'
-import type { FileMetadata } from '@renderer/types'
+import type { FileMetadata, Provider } from '@renderer/types'
 import { getErrorMessage, uuid } from '@renderer/utils'
-import { isNewApiProvider } from '@renderer/utils/provider'
+import {
+  isNewApiProvider,
+  isOpenAIImageProvider,
+  isOpenAIProvider,
+  isPaintingOpenAIImageProvider
+} from '@renderer/utils/provider'
 import { Avatar, Button, Empty, InputNumber, Segmented, Select, Upload } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import type { RcFile } from 'antd/es/upload'
@@ -44,9 +50,25 @@ import SendMessageButton from '../home/Inputbar/SendMessageButton'
 import { SettingHelpLink, SettingTitle } from '../settings'
 import Artboard from './components/Artboard'
 import ProviderSelect from './components/ProviderSelect'
-import { checkProviderEnabled, findPaintingByFiles } from './utils'
+import {
+  checkProviderEnabled,
+  findPaintingByFiles,
+  getPaintingProviderIdFromPathname,
+  getPaintingProviderPath
+} from './utils'
 
 const logger = loggerService.withContext('NewApiPage')
+
+// 当没有任何可用图片生成 provider 时使用的占位 provider，避免空引用崩溃
+const FALLBACK_PROVIDER: Provider = {
+  id: 'new-api',
+  type: 'new-api',
+  name: '',
+  apiKey: '',
+  apiHost: '',
+  models: [],
+  enabled: false
+}
 
 const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
   const [mode, setMode] = useState<keyof PaintingsState>('openai_image_generate')
@@ -71,15 +93,52 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
   const { theme } = useTheme()
   const providers = useAllProviders()
   const location = useLocation()
-  const routeName = location.pathname.split('/').pop() || 'new-api'
-  const newApiProviders = providers.filter((p) => isNewApiProvider(p))
+  // 路径分段过滤掉空字符串（防止结尾斜杠造成 pop() 取到空串）
+  const routeName = useMemo(() => {
+    return getPaintingProviderIdFromPathname(location.pathname)
+  }, [location.pathname])
+  // 与 PaintingsRoutePage 保持完全一致的过滤逻辑：
+  //  - 排除有专属页面的内置 provider（避免与 BASE_OPTIONS 重复）
+  //  - 启用 + 支持绘图图片接口
+  const newApiProviders = useMemo(
+    () =>
+      providers.filter((p) => {
+        if (['zhipu', 'aihubmix', 'silicon', 'dmxapi', 'tokenflux', 'ovms', 'ppio'].includes(p.id)) return false
+        return isPaintingOpenAIImageProvider(p)
+      }),
+    [providers]
+  )
 
   const dispatch = useAppDispatch()
   const { generating } = useRuntime()
   const navigate = useNavigate()
   const { autoTranslateWithSpace } = useSettings()
   const spaceClickTimer = useRef<NodeJS.Timeout>(null)
-  const newApiProvider = newApiProviders.find((p) => p.id === routeName) || newApiProviders[0]
+  // 当前 provider 优先按 routeName 在 providers 中查找；
+  // 找不到时退回到 Options[0] 对应的 provider，最后才使用 FALLBACK_PROVIDER 避免崩溃。
+  const newApiProvider = (() => {
+    const found = providers.find((p) => p.id === routeName)
+    if (found) return found
+    const firstId = Options[0]
+    return firstId ? providers.find((p) => p.id === firstId) || FALLBACK_PROVIDER : FALLBACK_PROVIDER
+  })()
+
+  useEffect(() => {
+    logger.debug('NewApiPage provider resolved', {
+      routeName,
+      resolvedId: newApiProvider.id,
+      resolvedType: newApiProvider.type,
+      providersCount: providers.length,
+      newApiProvidersCount: newApiProviders.length,
+      newApiProviderIds: newApiProviders.map((p) => p.id)
+    })
+  }, [routeName, newApiProvider.id, newApiProvider.type, providers.length, newApiProviders])
+
+  const handleProviderChange = (providerId: string) => {
+    if (providerId !== routeName) {
+      navigate(getPaintingProviderPath(providerId), { replace: true })
+    }
+  }
 
   const filteredPaintings = useMemo(
     () => (newApiPaintings[mode] || []).filter((p) => p.providerId === newApiProvider.id),
@@ -155,16 +214,45 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
   // const modelOptions = MODELS.map((m) => ({ label: m.name, value: m.name }))
 
   const modelOptions = useMemo(() => {
+    const isOpenAI = isOpenAIProvider(newApiProvider)
+    const usesOpenAIImageModels = isOpenAIImageProvider(newApiProvider)
+
     const customModels = newApiProvider.models
-      .filter((m) => m.endpoint_type && m.endpoint_type === 'image-generation')
+      .filter((m) => {
+        // NewApi 类型：与 hasPaintingImageModel 保持一致的判定逻辑
+        if (isNewApiProvider(newApiProvider)) {
+          return (
+            m.endpoint_type === 'image-generation' ||
+            isDedicatedImageGenerationModel(m) ||
+            /(?:gpt-image|dall-e)/i.test(m.id)
+          )
+        }
+        // OpenAI 类型：支持图片生成的模型
+        if (isOpenAI) {
+          return isDedicatedImageGenerationModel(m) || m.id.includes('gpt-image') || m.id.includes('dall-e')
+        }
+        return false
+      })
       .map((m) => ({
         label: m.name,
         value: m.id,
         custom: !SUPPORTED_MODELS.includes(m.id),
         group: m.group
       }))
+
+    // OpenAI / New API (IMAGE) provider 兜底：未手动添加图片模型时，补齐内置 SUPPORTED_MODELS
+    if (usesOpenAIImageModels) {
+      const existing = new Set(customModels.map((o) => o.value))
+      const fallback = SUPPORTED_MODELS.filter((id) => !existing.has(id)).map((id) => ({
+        label: id,
+        value: id,
+        custom: false,
+        group: isOpenAI ? 'OpenAI' : 'New API (IMAGE)'
+      }))
+      return [...customModels, ...fallback]
+    }
     return [...customModels]
-  }, [newApiProvider.models])
+  }, [newApiProvider.models, newApiProvider])
 
   // 根据 group 将模型进行分组，便于在下拉列表中分组渲染
   const groupedModelOptions = useMemo(() => {
@@ -304,16 +392,21 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
     }
     // NOTE: Cherry Studio当下 newapi只接受v1/images/xxx的请求
     // TODO: support gemini https://www.newapi.ai/zh/docs/api/ai-model/images/gemini/geminirelayv1beta-383837589
-    let url = newApiProvider.apiHost.replace(/\/v1$/, '') + `/v1/images/generations`
-    let editUrl = newApiProvider.apiHost.replace(/\/v1$/, '') + `/v1/images/edits`
+    const baseHost = newApiProvider.apiHost.replace(/\/+$/, '').replace(/\/v1$/, '')
+    let url = `${baseHost}/v1/images/generations`
+    let editUrl = `${baseHost}/v1/images/edits`
     if (newApiProvider.id === 'aionly') {
-      url = newApiProvider.apiHost.replace(/\/v1$/, '') + `/openai/v1/images/generations`
-      editUrl = newApiProvider.apiHost.replace(/\/v1$/, '') + `/openai/v1/images/edits`
+      url = `${baseHost}/openai/v1/images/generations`
+      editUrl = `${baseHost}/openai/v1/images/edits`
     }
+
+    // OpenAI 官方域名 + gpt-image-1 不接受 response_format；第三方代理需要显式传递才会返回 b64_json
+    const isOfficialOpenAI = /(^|\/\/)api\.openai\.com/i.test(newApiProvider.apiHost || '')
+    const supportsResponseFormat = !(isOfficialOpenAI && /gpt-image/i.test(painting.model))
 
     try {
       if (mode === 'openai_image_generate') {
-        const requestData = {
+        const requestData: Record<string, unknown> = {
           prompt,
           model: painting.model,
           size: painting.size === 'auto' ? undefined : painting.size,
@@ -321,6 +414,9 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
           n: painting.n,
           quality: painting.quality === 'auto' ? undefined : painting.quality,
           moderation: painting.moderation === 'auto' ? undefined : painting.moderation
+        }
+        if (supportsResponseFormat) {
+          requestData.response_format = 'b64_json'
         }
 
         body = JSON.stringify(requestData)
@@ -351,6 +447,10 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
           formData.append('moderation', painting.moderation)
         }
 
+        if (supportsResponseFormat) {
+          formData.append('response_format', 'b64_json')
+        }
+
         // append images
         editImages.forEach((file) => {
           formData.append('image', file)
@@ -373,8 +473,8 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
 
       const data = await response.json()
       // 解析图片 - metadata.output.choices 和 data 包含相同图片，只取其中一个
-      let urls: string[] = []
-      let base64s: string[] = []
+      const urls: string[] = []
+      const base64s: string[] = []
 
       if (data.metadata?.output?.choices?.length) {
         // 万相/阿里云格式：每个 choice 包含一张图，遍历所有 choices
@@ -389,9 +489,14 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
           }
         }
       } else if (data.data && Array.isArray(data.data)) {
-        // 标准 OpenAI 格式
-        urls = data.data.filter((item) => item.url).map((item) => item.url)
-        base64s = data.data.filter((item) => item.b64_json).map((item) => item.b64_json)
+        // 标准 OpenAI 格式：每个 item 内优先非空 b64_json，否则取 url，避免重复下载
+        for (const item of data.data) {
+          if (item.b64_json) {
+            base64s.push(item.b64_json)
+          } else if (item.url) {
+            urls.push(item.url)
+          }
+        }
       }
 
       if (urls.length > 0) {
@@ -501,13 +606,6 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
         setIsTranslating(true)
         void translate()
       }
-    }
-  }
-
-  const handleProviderChange = (providerId: string) => {
-    const routeName = location.pathname.split('/').pop()
-    if (providerId !== routeName) {
-      navigate('../' + providerId, { replace: true })
     }
   }
 

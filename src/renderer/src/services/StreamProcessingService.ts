@@ -16,7 +16,7 @@ const logger = loggerService.withContext('StreamProcessingService')
 // Define the structure for the callbacks that the StreamProcessor will invoke
 export interface StreamProcessorCallbacks {
   // LLM response created
-  onLLMResponseCreated?: () => void
+  onLLMResponseCreated?: () => void | Promise<void>
   // Text content start
   onTextStart?: () => void
   // Text content chunk received
@@ -47,10 +47,10 @@ export interface StreamProcessorCallbacks {
   // Set citation block ID
   setCitationBlockId?: (blockId: string) => void
   // Image generation chunk received
-  onImageCreated?: () => void
-  onImageDelta?: (imageData: GenerateImageResponse) => void
-  onImageGenerated?: (imageData?: GenerateImageResponse) => void
-  onLLMResponseComplete?: (response?: Response) => void
+  onImageCreated?: () => void | Promise<void>
+  onImageDelta?: (imageData: GenerateImageResponse) => void | Promise<void>
+  onImageGenerated?: (imageData?: GenerateImageResponse) => void | Promise<void>
+  onLLMResponseComplete?: (response?: Response) => void | Promise<void>
   // Called when an error occurs during chunk processing
   onError?: (error: any) => void
   // Called when the entire stream processing is signaled as complete (success or failure)
@@ -65,17 +65,17 @@ export interface StreamProcessorCallbacks {
 // Function to create a stream processor instance
 export function createStreamProcessor(callbacks: StreamProcessorCallbacks = {}) {
   // The returned function processes a single chunk or a final signal
-  return (chunk: Chunk) => {
+  return async (chunk: Chunk) => {
     try {
       const data = chunk
       // logger.debug('data: ', data)
       switch (data.type) {
         case ChunkType.BLOCK_COMPLETE: {
-          if (callbacks.onComplete) callbacks.onComplete(AssistantMessageStatus.SUCCESS, data?.response)
+          if (callbacks.onComplete) await callbacks.onComplete(AssistantMessageStatus.SUCCESS, data?.response)
           break
         }
         case ChunkType.LLM_RESPONSE_CREATED: {
-          if (callbacks.onLLMResponseCreated) callbacks.onLLMResponseCreated()
+          if (callbacks.onLLMResponseCreated) await callbacks.onLLMResponseCreated()
           break
         }
         case ChunkType.TEXT_START: {
@@ -140,19 +140,19 @@ export function createStreamProcessor(callbacks: StreamProcessorCallbacks = {}) 
           break
         }
         case ChunkType.IMAGE_CREATED: {
-          if (callbacks.onImageCreated) callbacks.onImageCreated()
+          if (callbacks.onImageCreated) await callbacks.onImageCreated()
           break
         }
         case ChunkType.IMAGE_DELTA: {
-          if (callbacks.onImageDelta) callbacks.onImageDelta(data.image)
+          if (callbacks.onImageDelta) await callbacks.onImageDelta(data.image)
           break
         }
         case ChunkType.IMAGE_COMPLETE: {
-          if (callbacks.onImageGenerated) callbacks.onImageGenerated(data.image)
+          if (callbacks.onImageGenerated) await callbacks.onImageGenerated(data.image)
           break
         }
         case ChunkType.LLM_RESPONSE_COMPLETE: {
-          if (callbacks.onLLMResponseComplete) callbacks.onLLMResponseComplete(data.response)
+          if (callbacks.onLLMResponseComplete) await callbacks.onLLMResponseComplete(data.response)
           break
         }
         case ChunkType.ERROR: {

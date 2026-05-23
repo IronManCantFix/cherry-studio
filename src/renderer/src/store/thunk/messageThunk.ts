@@ -652,7 +652,7 @@ const fetchAndProcessAgentResponseImpl = async (
     const streamProcessorCallbacks = createStreamProcessor(callbacks)
 
     // Emit initial chunk to mirror assistant behaviour and ensure pending UI state
-    streamProcessorCallbacks({ type: ChunkType.LLM_RESPONSE_CREATED })
+    await streamProcessorCallbacks({ type: ChunkType.LLM_RESPONSE_CREATED })
 
     const state = getState()
     const userMessageEntity = state.messages.entities[userMessageId]
@@ -2231,7 +2231,7 @@ export const setupChannelStream = (
   })
 
   const streamProcessorCallbacks = createStreamProcessor(callbacks)
-  streamProcessorCallbacks({ type: ChunkType.LLM_RESPONSE_CREATED })
+  void streamProcessorCallbacks({ type: ChunkType.LLM_RESPONSE_CREATED })
 
   const adapter = new AiSdkToChunkAdapter(streamProcessorCallbacks, [], false, false)
   adapter

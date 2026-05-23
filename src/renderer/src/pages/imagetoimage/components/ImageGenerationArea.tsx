@@ -7,7 +7,8 @@ import { useProviders } from '@renderer/hooks/useProvider'
 import type { Provider } from '@renderer/types'
 import { getErrorMessage } from '@renderer/utils'
 import { download } from '@renderer/utils/download'
-import { isVolcengineImageProvider } from '@renderer/utils/provider'
+import { detectImageMimeFromBase64, fetchImageAsDataUrl } from '@renderer/utils/image'
+import { isNewApiProvider, isOpenAIProvider, isVolcengineImageProvider } from '@renderer/utils/provider'
 import type { MenuProps } from 'antd'
 import { AutoComplete, Avatar, Dropdown, Image as AntImage, Popconfirm, Select, Spin, Tooltip, Upload } from 'antd'
 import dayjs from 'dayjs'
@@ -96,7 +97,16 @@ const ImageGenerationArea: React.FC = () => {
     [records]
   )
 
-  const availableProviders = useMemo(() => providers.filter((p) => p.models && p.models.length > 0), [providers])
+  const availableProviders = useMemo(
+    () =>
+      providers.filter(
+        (p) =>
+          p.models &&
+          p.models.length > 0 &&
+          (isOpenAIProvider(p) || isNewApiProvider(p) || isVolcengineImageProvider(p))
+      ),
+    [providers]
+  )
   const currentProvider = useMemo(
     () => availableProviders.find((p) => p.id === effectiveProviderId) || availableProviders[0],
     [availableProviders, effectiveProviderId]
@@ -285,10 +295,13 @@ const ImageGenerationArea: React.FC = () => {
         }
       } else {
         // 通用 OpenAI 兼容接口
-        const baseUrl = currentProvider.apiHost.replace(/\/v1$/, '')
-        const endpoint = hasInputImages ? '/v1/images/edits/' : '/v1/images/generations/'
+        const baseUrl = currentProvider.apiHost.replace(/\/+$/, '').replace(/\/v1$/, '')
+        const endpoint = hasInputImages ? '/v1/images/edits' : '/v1/images/generations'
         const url = `${baseUrl}${endpoint}`
         const imageQuality = activeSession?.imageQuality ?? 'auto'
+        // OpenAI 官方域名 + gpt-image-1 不接受 response_format；第三方代理需要显式传递才会返回 b64_json
+        const isOfficialOpenAI = /(^|\/\/)api\.openai\.com/i.test(currentProvider.apiHost)
+        const supportsResponseFormat = !(isOfficialOpenAI && /gpt-image/i.test(effectiveModelId))
 
         const headers: Record<string, string> = { Authorization: `Bearer ${AI.getApiKey()}` }
         let body: FormData | string
@@ -299,8 +312,12 @@ const ImageGenerationArea: React.FC = () => {
           formData.append('model', effectiveModelId)
           formData.append('n', String(imageN))
           formData.append('size', imageSize)
-          formData.append('quality', imageQuality)
-          formData.append('response_format', imageResponseFormat)
+          if (imageQuality && imageQuality !== 'auto') {
+            formData.append('quality', imageQuality)
+          }
+          if (supportsResponseFormat) {
+            formData.append('response_format', imageResponseFormat)
+          }
           genFiles.forEach((file) => {
             formData.append('image', file)
           })
@@ -308,14 +325,19 @@ const ImageGenerationArea: React.FC = () => {
           body = formData
         } else {
           headers['Content-Type'] = 'application/json'
-          body = JSON.stringify({
+          const payload: Record<string, unknown> = {
             prompt: finalPrompt,
             model: effectiveModelId,
             n: imageN,
-            size: imageSize,
-            quality: imageQuality,
-            response_format: imageResponseFormat
-          })
+            size: imageSize
+          }
+          if (imageQuality && imageQuality !== 'auto') {
+            payload.quality = imageQuality
+          }
+          if (supportsResponseFormat) {
+            payload.response_format = imageResponseFormat
+          }
+          body = JSON.stringify(payload)
         }
 
         const response = await fetch(url, { method: 'POST', headers, body, signal: abortController.signal })
@@ -339,10 +361,22 @@ const ImageGenerationArea: React.FC = () => {
             }
           }
         } else if (data.data && Array.isArray(data.data)) {
-          // 标准 OpenAI 格式
+          // 标准 OpenAI 格式：优先非空 b64_json（部分代理会同时返回不可用的 url）
           for (const item of data.data) {
-            if (item.url) generatedImageUrls.push(item.url)
-            else if (item.b64_json) generatedImageUrls.push(`data:image/png;base64,${item.b64_json}`)
+            if (item.b64_json) {
+              const mime = detectImageMimeFromBase64(item.b64_json)
+              generatedImageUrls.push(`data:${mime};base64,${item.b64_json}`)
+            } else if (item.url) {
+              // 部分代理只返回内部域名 URL（如 http://chatgpt2api/...），渲染器无法直接加载
+              // 尝试 fetch 转 base64；失败时回退到原 URL，让用户从控制台看到错误
+              try {
+                const dataUrl = await fetchImageAsDataUrl(item.url, abortController.signal)
+                generatedImageUrls.push(dataUrl)
+              } catch (e) {
+                logger.warn(`Fetch image url as base64 failed, fallback to raw url: ${item.url}`, e as Error)
+                generatedImageUrls.push(item.url)
+              }
+            }
           }
         }
       }

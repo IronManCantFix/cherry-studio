@@ -39,7 +39,7 @@ import { SettingTitle } from '../settings'
 import Artboard from './components/Artboard'
 import PaintingsList from './components/PaintingsList'
 import ProviderSelect from './components/ProviderSelect'
-import { checkProviderEnabled } from './utils'
+import { checkProviderEnabled, getPaintingProviderIdFromPathname, getPaintingProviderPath } from './utils'
 
 export const TEXT_TO_IMAGES_MODELS = [
   {
@@ -335,9 +335,9 @@ const SiliconPage: FC<{ Options: string[] }> = ({ Options }) => {
   }
 
   const handleProviderChange = (providerId: string) => {
-    const routeName = location.pathname.split('/').pop()
+    const routeName = getPaintingProviderIdFromPathname(location.pathname)
     if (providerId !== routeName) {
-      navigate('../' + providerId, { replace: true })
+      navigate(getPaintingProviderPath(providerId), { replace: true })
     }
   }
 

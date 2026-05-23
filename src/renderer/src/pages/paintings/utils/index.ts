@@ -2,6 +2,25 @@ import type { FileMetadata, Provider } from '@renderer/types'
 import type { TFunction } from 'i18next'
 import { isEmpty } from 'lodash'
 
+export function getPaintingProviderPath(providerId: string): string {
+  return `/paintings/${encodeURIComponent(providerId)}`
+}
+
+export function decodePaintingProviderId(providerId: string): string {
+  try {
+    return decodeURIComponent(providerId)
+  } catch {
+    return providerId
+  }
+}
+
+export function getPaintingProviderIdFromPathname(pathname: string): string {
+  const segments = pathname.split('/').filter(Boolean)
+  const paintingsIndex = segments.findIndex((segment) => segment === 'paintings')
+  const providerId = paintingsIndex === -1 ? segments[segments.length - 1] : segments[paintingsIndex + 1]
+  return decodePaintingProviderId(providerId || 'new-api')
+}
+
 export function checkProviderEnabled(provider: Provider, t: TFunction): Promise<boolean> {
   return new Promise((resolve, reject) => {
     if (provider.enabled && !isEmpty(provider.apiKey)) {

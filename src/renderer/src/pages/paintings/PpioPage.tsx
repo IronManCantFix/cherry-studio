@@ -39,7 +39,7 @@ import {
   type PpioConfigItem,
   type PpioMode
 } from './config/ppioConfig'
-import { checkProviderEnabled } from './utils'
+import { checkProviderEnabled, getPaintingProviderPath } from './utils'
 import PpioService from './utils/PpioService'
 
 const logger = loggerService.withContext('PpioPage')
@@ -171,7 +171,7 @@ const PpioPage: FC<{ Options: string[] }> = ({ Options }) => {
   }
 
   const handleProviderChange = (providerId: string) => {
-    navigate(`/paintings/${providerId}`, { replace: true })
+    navigate(getPaintingProviderPath(providerId), { replace: true })
   }
 
   const handleModeChange = (value: string) => {

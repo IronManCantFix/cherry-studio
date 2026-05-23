@@ -38,6 +38,7 @@ import {
   getOvmsModels,
   OVMS_MODELS
 } from './config/ovmsConfig'
+import { getPaintingProviderIdFromPathname, getPaintingProviderPath } from './utils'
 
 const logger = loggerService.withContext('OvmsPage')
 
@@ -330,9 +331,9 @@ const OvmsPage: FC<{ Options: string[] }> = ({ Options }) => {
   }
 
   const handleProviderChange = (providerId: string) => {
-    const routeName = location.pathname.split('/').pop()
+    const routeName = getPaintingProviderIdFromPathname(location.pathname)
     if (providerId !== routeName) {
-      navigate('../' + providerId, { replace: true })
+      navigate(getPaintingProviderPath(providerId), { replace: true })
     }
   }
 

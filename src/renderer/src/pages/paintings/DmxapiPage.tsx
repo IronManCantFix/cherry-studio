@@ -38,7 +38,7 @@ import {
   STYLE_TYPE_OPTIONS,
   TOP_UP_URL
 } from './config/DmxapiConfig'
-import { checkProviderEnabled } from './utils'
+import { checkProviderEnabled, getPaintingProviderIdFromPathname, getPaintingProviderPath } from './utils'
 
 const generateRandomSeed = () => Math.floor(Math.random() * 1000000).toString()
 
@@ -655,9 +655,9 @@ const DmxapiPage: FC<{ Options: string[] }> = ({ Options }) => {
   }
 
   const handleProviderChange = (providerId: string) => {
-    const routeName = location.pathname.split('/').pop()
+    const routeName = getPaintingProviderIdFromPathname(location.pathname)
     if (providerId !== routeName) {
-      navigate('../' + providerId, { replace: true })
+      navigate(getPaintingProviderPath(providerId), { replace: true })
     }
   }
 

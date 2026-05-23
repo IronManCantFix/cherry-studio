@@ -630,3 +630,30 @@ export const convertImageToPng = async (blob: Blob): Promise<Blob> => {
     img.src = url
   })
 }
+
+/**
+ * 根据 base64 字符串前缀嗅探图片 MIME；服务端可能返回 webp/jpeg 而非 png
+ */
+export function detectImageMimeFromBase64(b64: string): string {
+  const head = b64.slice(0, 16)
+  if (head.startsWith('iVBORw0KGgo')) return 'image/png'
+  if (head.startsWith('/9j/')) return 'image/jpeg'
+  if (head.startsWith('R0lGOD')) return 'image/gif'
+  if (head.startsWith('UklGR')) return 'image/webp'
+  return 'image/png'
+}
+
+/**
+ * 把远程图片 URL 抓取并转换为 data URI，用于代理返回内部域名 URL 无法直接渲染的情况
+ */
+export async function fetchImageAsDataUrl(url: string, signal?: AbortSignal): Promise<string> {
+  const resp = await fetch(url, { signal })
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+  const blob = await resp.blob()
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error || new Error('FileReader error'))
+    reader.readAsDataURL(blob)
+  })
+}

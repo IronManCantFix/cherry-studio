@@ -36,7 +36,7 @@ import Artboard from './components/Artboard'
 import PaintingsList from './components/PaintingsList'
 import ProviderSelect from './components/ProviderSelect'
 import { type ConfigItem, createModeConfigs, DEFAULT_PAINTING } from './config/aihubmixConfig'
-import { checkProviderEnabled } from './utils'
+import { checkProviderEnabled, getPaintingProviderIdFromPathname, getPaintingProviderPath } from './utils'
 
 const logger = loggerService.withContext('AihubmixPage')
 
@@ -669,9 +669,9 @@ const AihubmixPage: FC<{ Options: string[] }> = ({ Options }) => {
   }
 
   const handleProviderChange = (providerId: string) => {
-    const routeName = location.pathname.split('/').pop()
+    const routeName = getPaintingProviderIdFromPathname(location.pathname)
     if (providerId !== routeName) {
-      navigate('../' + providerId, { replace: true })
+      navigate(getPaintingProviderPath(providerId), { replace: true })
     }
   }
 

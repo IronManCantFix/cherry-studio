@@ -33,7 +33,7 @@ import {
   TOP_UP_URL,
   ZHIPU_PAINTING_MODELS
 } from './config/ZhipuConfig'
-import { checkProviderEnabled } from './utils'
+import { checkProviderEnabled, getPaintingProviderIdFromPathname, getPaintingProviderPath } from './utils'
 
 const ZhipuPage: FC<{ Options: string[] }> = ({ Options }) => {
   const { zhipu_paintings, addPainting, removePainting, updatePainting } = usePaintings()
@@ -254,9 +254,9 @@ const ZhipuPage: FC<{ Options: string[] }> = ({ Options }) => {
   }
 
   const handleProviderChange = (providerId: string) => {
-    const routeName = location.pathname.split('/').pop()
+    const routeName = getPaintingProviderIdFromPathname(location.pathname)
     if (providerId !== routeName) {
-      navigate('../' + providerId, { replace: true })
+      navigate(getPaintingProviderPath(providerId), { replace: true })
     }
   }
 

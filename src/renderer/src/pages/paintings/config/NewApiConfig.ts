@@ -1,7 +1,7 @@
 import type { GeneratePainting } from '@renderer/types'
 import { uuid } from '@renderer/utils'
 
-export const SUPPORTED_MODELS = ['gpt-image-1']
+export const SUPPORTED_MODELS = ['gpt-image-1', 'dall-e-3', 'dall-e-2']
 
 export const MODELS = [
   {
@@ -14,6 +14,28 @@ export const MODELS = [
     output_compression_format: [{ value: 'jpeg' }, { value: 'webp' }],
     output_format: [{ value: 'image/png' }, { value: 'image/jpeg' }, { value: 'image/webp' }],
     background: [{ value: 'auto' }, { value: 'transparent' }, { value: 'opaque' }]
+  },
+  {
+    name: 'dall-e-3',
+    group: 'OpenAI',
+    imageSizes: [{ value: '1024x1024' }, { value: '1792x1024' }, { value: '1024x1792' }],
+    max_images: 1,
+    quality: [{ value: 'standard' }, { value: 'hd' }],
+    moderation: [],
+    output_compression_format: [],
+    output_format: [],
+    background: []
+  },
+  {
+    name: 'dall-e-2',
+    group: 'OpenAI',
+    imageSizes: [{ value: '256x256' }, { value: '512x512' }, { value: '1024x1024' }],
+    max_images: 10,
+    quality: [],
+    moderation: [],
+    output_compression_format: [],
+    output_format: [],
+    background: []
   }
 ]
 

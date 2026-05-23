@@ -11,9 +11,11 @@ import {
   isCherryAIProvider,
   isGeminiProvider,
   isGeminiWebSearchProvider,
+  isNewApiImageProvider,
   isNewApiProvider,
   isOpenAICompatibleProvider,
   isOpenAIProvider,
+  isPaintingOpenAIImageProvider,
   isPerplexityProvider,
   isSupportAPIVersionProvider,
   isSupportArrayContentProvider,
@@ -178,6 +180,8 @@ describe('provider utils', () => {
     expect(isNewApiProvider(createProvider({ id: SystemProviderIds['new-api'] }))).toBe(true)
     expect(isNewApiProvider(createProvider({ id: SystemProviderIds.cherryin }))).toBe(true)
     expect(isNewApiProvider(createProvider({ type: 'new-api' }))).toBe(true)
+    expect(isNewApiImageProvider(createProvider({ type: 'new-api-image' }))).toBe(true)
+    expect(isNewApiImageProvider(createProvider({ type: 'new-api' }))).toBe(false)
     expect(isNewApiProvider(createProvider())).toBe(false)
   })
 
@@ -207,11 +211,39 @@ describe('provider utils', () => {
 
   it('checks provider type helpers', () => {
     expect(isOpenAIProvider(createProvider({ type: 'openai-response' }))).toBe(true)
-    expect(isOpenAIProvider(createProvider())).toBe(false)
+    expect(isOpenAIProvider(createProvider({ type: 'openai' }))).toBe(true)
+    expect(isOpenAIProvider(createProvider({ type: 'openai-compatible' as any }))).toBe(true)
+    expect(isOpenAIProvider(createProvider({ type: 'new-api' }))).toBe(false)
 
     expect(isAnthropicProvider(createProvider({ type: 'anthropic' }))).toBe(true)
     expect(isGeminiProvider(createProvider({ type: 'gemini' }))).toBe(true)
     expect(isAIGatewayProvider(createProvider({ type: 'gateway' }))).toBe(true)
+  })
+
+  it('detects painting OpenAI image providers without mixing provider types', () => {
+    expect(isPaintingOpenAIImageProvider(createProvider({ type: 'openai', enabled: true, models: [] }))).toBe(false)
+    expect(isPaintingOpenAIImageProvider(createProvider({ type: 'openai-response', enabled: true, models: [] }))).toBe(
+      false
+    )
+    expect(isPaintingOpenAIImageProvider(createProvider({ type: 'openai-compatible' as any, models: [] }))).toBe(false)
+    expect(isPaintingOpenAIImageProvider(createProvider({ type: 'openai', enabled: undefined, models: [] }))).toBe(
+      false
+    )
+    expect(isPaintingOpenAIImageProvider(createProvider({ type: 'openai', enabled: false, models: [] }))).toBe(false)
+
+    expect(
+      isPaintingOpenAIImageProvider(
+        createProvider({
+          type: 'new-api-image',
+          enabled: true,
+          models: [{ id: 'gpt-image-1', name: 'gpt-image-1', provider: 'custom', group: 'custom' }]
+        })
+      )
+    ).toBe(true)
+    expect(isPaintingOpenAIImageProvider(createProvider({ type: 'new-api-image', enabled: true, models: [] }))).toBe(
+      true
+    )
+    expect(isPaintingOpenAIImageProvider(createProvider({ type: 'anthropic', enabled: true, models: [] }))).toBe(false)
   })
 
   it('computes API version support', () => {

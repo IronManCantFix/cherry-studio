@@ -32,7 +32,7 @@ import { DynamicFormRender } from './components/DynamicFormRender'
 import PaintingsList from './components/PaintingsList'
 import ProviderSelect from './components/ProviderSelect'
 import { DEFAULT_TOKENFLUX_PAINTING, type TokenFluxModel } from './config/tokenFluxConfig'
-import { checkProviderEnabled } from './utils'
+import { checkProviderEnabled, getPaintingProviderIdFromPathname, getPaintingProviderPath } from './utils'
 import TokenFluxService from './utils/TokenFluxService'
 
 const logger = loggerService.withContext('TokenFluxPage')
@@ -269,9 +269,9 @@ const TokenFluxPage: FC<{ Options: string[] }> = ({ Options }) => {
   }
 
   const handleProviderChange = (providerId: string) => {
-    const routeName = location.pathname.split('/').pop()
+    const routeName = getPaintingProviderIdFromPathname(location.pathname)
     if (providerId !== routeName) {
-      navigate('../' + providerId, { replace: true })
+      navigate(getPaintingProviderPath(providerId), { replace: true })
     }
   }
 

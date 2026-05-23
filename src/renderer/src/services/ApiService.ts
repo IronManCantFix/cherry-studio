@@ -55,6 +55,14 @@ import type { StreamProcessorCallbacks } from './StreamProcessingService'
 const logger = loggerService.withContext('ApiService')
 const SUMMARY_REQUEST_TIMEOUT_MS = 15_000
 
+const isBase64ImageResult = (image?: string): boolean => {
+  if (!image) return false
+  if (image.startsWith('data:image/')) return true
+  if (/^https?:\/\//i.test(image) || image.startsWith('file://') || image.startsWith('blob:')) return false
+
+  return /^[A-Za-z0-9+/]+={0,2}$/.test(image.trim())
+}
+
 /**
  * Get the MCP servers to use based on the assistant's MCP mode.
  */
@@ -154,7 +162,7 @@ export async function transformMessagesAndFetch(
       headers?: Record<string, string>
     }
   },
-  onChunkReceived: (chunk: Chunk) => void
+  onChunkReceived: (chunk: Chunk) => void | Promise<void>
 ) {
   const { messages, assistant } = request
 
@@ -362,7 +370,7 @@ export async function fetchImageGeneration({
 }: {
   messages: Message[]
   assistant: Assistant
-  onChunkReceived: (chunk: Chunk) => void
+  onChunkReceived: (chunk: Chunk) => void | Promise<void>
 }) {
   // 创建 AI provider
   const baseProvider = getProviderByModel(assistant.model || getDefaultModel())
@@ -372,8 +380,8 @@ export async function fetchImageGeneration({
   }
   const aiProvider = new AiProvider(assistant.model || getDefaultModel(), providerWithRotatedKey)
 
-  onChunkReceived({ type: ChunkType.LLM_RESPONSE_CREATED })
-  onChunkReceived({ type: ChunkType.IMAGE_CREATED })
+  await onChunkReceived({ type: ChunkType.LLM_RESPONSE_CREATED })
+  await onChunkReceived({ type: ChunkType.IMAGE_CREATED })
 
   const startTime = Date.now()
 
@@ -412,8 +420,8 @@ export async function fetchImageGeneration({
     }
 
     // 发送结果 chunks
-    const imageType = images[0]?.startsWith('data:') ? 'base64' : 'url'
-    onChunkReceived({
+    const imageType = isBase64ImageResult(images[0]) ? 'base64' : 'url'
+    await onChunkReceived({
       type: ChunkType.IMAGE_COMPLETE,
       image: { type: imageType, images }
     })
@@ -430,10 +438,10 @@ export async function fetchImageGeneration({
         time_completion_millsec: Date.now() - startTime
       }
     }
-    onChunkReceived({ type: ChunkType.BLOCK_COMPLETE, response: imageResponse })
-    onChunkReceived({ type: ChunkType.LLM_RESPONSE_COMPLETE, response: imageResponse })
+    await onChunkReceived({ type: ChunkType.BLOCK_COMPLETE, response: imageResponse })
+    await onChunkReceived({ type: ChunkType.LLM_RESPONSE_COMPLETE, response: imageResponse })
   } catch (error) {
-    onChunkReceived({ type: ChunkType.ERROR, error: error as Error })
+    await onChunkReceived({ type: ChunkType.ERROR, error: error as Error })
     throw error
   }
 }
