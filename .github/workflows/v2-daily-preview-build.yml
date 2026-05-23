@@ -170,11 +170,22 @@ jobs:
         if: matrix.os == 'macos-latest'
         shell: bash
         run: |
+          # 诊断：electron-builder 26.x 的 getCscLink 注释明写 "allow to specify as empty string"，
+          # 一旦 CSC_LINK 是空串就会被当成 path.resolve(cwd, "") = cwd，报 "<cwd> not a file"。
+          # 这里打印长度（不打印值，避免泄露），便于排查 secret/继承来源。
+          echo "[diag] CSC_LINK_VALUE length=${#CSC_LINK_VALUE}"
+          echo "[diag] inherited CSC_LINK length=${#CSC_LINK}"
+          echo "[diag] inherited CSC_KEY_PASSWORD length=${#CSC_KEY_PASSWORD}"
+          # 强制清掉任何被继承进来的 CSC_* 变量，确保只走我们下面的判定
+          unset CSC_LINK CSC_KEY_PASSWORD CSC_NAME \
+                CSC_INSTALLER_LINK CSC_INSTALLER_KEY_PASSWORD \
+                WIN_CSC_LINK WIN_CSC_KEY_PASSWORD
           if [ -n "$CSC_LINK_VALUE" ]; then
             export CSC_LINK="$CSC_LINK_VALUE"
             export CSC_KEY_PASSWORD="$CSC_KEY_PASSWORD_VALUE"
             echo "Code signing enabled"
           else
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
             echo "CSC_LINK not provided — building without code signing"
           fi
           pnpm build:mac
