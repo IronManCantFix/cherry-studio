@@ -10,6 +10,10 @@ import type { BlockManager } from '../BlockManager'
 
 const logger = loggerService.withContext('ImageCallbacks')
 
+const getCurrentTopicId = (state: any): string | undefined => {
+  return state.runtime?.chat?.activeTopic?.id ?? state.topics?.activeTopicId
+}
+
 const normalizeGeneratedImageResponse = (imageData: GenerateImageResponse): GenerateImageResponse => {
   if (imageData.type !== 'base64') {
     return imageData
@@ -47,7 +51,7 @@ export const createImageCallbacks = (deps: ImageCallbacksDependencies) => {
     onImageCreated: async () => {
       // 检查当前 topic 是否与发送消息时的 topic 一致
       const state = getState()
-      const currentTopicId = state.topics?.activeTopicId
+      const currentTopicId = getCurrentTopicId(state)
       if (currentTopicId !== originalTopicId) {
         logger.info(
           `[ImageCallbacks] Topic changed from ${originalTopicId} to ${currentTopicId}, ignoring image created callback`
@@ -73,8 +77,11 @@ export const createImageCallbacks = (deps: ImageCallbacksDependencies) => {
     onImageDelta: (imageData: GenerateImageResponse) => {
       // 检查当前 topic 是否与发送消息时的 topic 一致
       const state = getState()
-      const currentTopicId = state.topics?.activeTopicId
+      const currentTopicId = getCurrentTopicId(state)
       if (currentTopicId !== originalTopicId) {
+        logger.info(
+          `[ImageCallbacks] Topic changed from ${originalTopicId} to ${currentTopicId}, ignoring image delta callback`
+        )
         return
       }
 
@@ -93,7 +100,7 @@ export const createImageCallbacks = (deps: ImageCallbacksDependencies) => {
     onImageGenerated: async (imageData?: GenerateImageResponse) => {
       // 检查当前 topic 是否与发送消息时的 topic 一致
       const state = getState()
-      const currentTopicId = state.topics?.activeTopicId
+      const currentTopicId = getCurrentTopicId(state)
       if (currentTopicId !== originalTopicId) {
         logger.info(
           `[ImageCallbacks] Topic changed from ${originalTopicId} to ${currentTopicId}, ignoring image generated callback`

@@ -288,15 +288,18 @@ vi.mock('@renderer/utils', () => ({
   uuid: vi.fn(() => 'mock-uuid-' + Math.random().toString(36).slice(2, 11))
 }))
 
-interface MockTopicsState {
-  entities: Record<string, unknown>
-  activeTopicId: string
+interface MockRuntimeState {
+  chat: {
+    activeTopic: {
+      id: string
+    }
+  }
 }
 
 const reducer = combineReducers({
   messages: messagesSlice.reducer,
   messageBlocks: messageBlocksSlice.reducer,
-  topics: (state: MockTopicsState = { entities: {}, activeTopicId: 'test-topic-id' }) => state
+  runtime: (state: MockRuntimeState = { chat: { activeTopic: { id: 'test-topic-id' } } }) => state
 })
 
 const createMockStore = () => {
