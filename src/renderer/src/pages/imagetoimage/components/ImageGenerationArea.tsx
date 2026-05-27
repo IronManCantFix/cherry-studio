@@ -366,6 +366,17 @@ const ImageGenerationArea: React.FC = () => {
             length: data.data.length,
             firstItemKeys: data.data[0] ? Object.keys(data.data[0]) : 'empty'
           })
+          // 调试：打印第一个 item 的 b64_json 值和类型
+          if (data.data[0]) {
+            const first = data.data[0]
+            logger.info('[ImageGeneration] b64_json debug', {
+              exists: 'b64_json' in first,
+              type: typeof first.b64_json,
+              isNull: first.b64_json === null,
+              length: typeof first.b64_json === 'string' ? first.b64_json.length : 'N/A',
+              preview: typeof first.b64_json === 'string' ? first.b64_json.slice(0, 30) + '...' : String(first.b64_json)
+            })
+          }
           for (const item of data.data) {
             // 遍历所有可能的 base64 字段名（兼容不同代理的命名）
             let b64: string | undefined
