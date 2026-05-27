@@ -347,6 +347,15 @@ const ImageGenerationArea: React.FC = () => {
         }
 
         const data = await response.json()
+        // 调试：打印响应顶层结构
+        logger.info('[ImageGeneration] Full response structure', {
+          topLevelKeys: Object.keys(data),
+          hasData: !!data.data,
+          isArray: Array.isArray(data),
+          dataType: typeof data.data,
+          dataIsArray: Array.isArray(data.data),
+          dataPreview: JSON.stringify(data).slice(0, 300)
+        })
 
         // 解析图片 - metadata.output.choices 和 data 包含相同图片，只取其中一个
         if (data.metadata?.output?.choices?.length) {
