@@ -476,14 +476,12 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
       const urls: string[] = []
       const base64s: string[] = []
 
-      logger.info('[ImageGeneration] Response keys:', Object.keys(data))
+      logger.info('[ImageGeneration] Response keys', { keys: Object.keys(data) })
       if (data.data && Array.isArray(data.data)) {
-        logger.info(
-          '[ImageGeneration] data.data length:',
-          data.data.length,
-          'first item keys:',
-          data.data[0] ? Object.keys(data.data[0]) : 'empty'
-        )
+        logger.info('[ImageGeneration] data.data items', {
+          length: data.data.length,
+          firstItemKeys: data.data[0] ? Object.keys(data.data[0]) : 'empty'
+        })
       }
 
       if (data.metadata?.output?.choices?.length) {
@@ -505,12 +503,12 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
           if (b64) {
             base64s.push(b64)
           } else if (item.url) {
-            logger.warn('[ImageGeneration] b64_json missing, falling back to url:', item.url)
+            logger.warn('[ImageGeneration] b64_json missing, falling back to url', { url: item.url })
             urls.push(item.url)
           }
         }
       } else {
-        logger.warn('[ImageGeneration] Unexpected response structure:', JSON.stringify(data).slice(0, 500))
+        logger.warn('[ImageGeneration] Unexpected response structure', { preview: JSON.stringify(data).slice(0, 500) })
       }
 
       if (urls.length > 0) {

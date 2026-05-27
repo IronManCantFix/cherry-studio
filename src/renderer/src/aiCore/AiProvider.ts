@@ -494,14 +494,12 @@ export default class AiProvider {
       metadata?: { output?: { choices?: Array<{ message?: { content?: Array<{ image?: string }> } }> } }
     }
 
-    logger.info('[parseOpenAIImageResponse] Response keys:', Object.keys(data || {}))
+    logger.info('[parseOpenAIImageResponse] Response keys', { keys: Object.keys(data || {}) })
     if (Array.isArray(data?.data)) {
-      logger.info(
-        '[parseOpenAIImageResponse] data.data length:',
-        data.data.length,
-        'first item keys:',
-        data.data[0] ? Object.keys(data.data[0]) : 'empty'
-      )
+      logger.info('[parseOpenAIImageResponse] data.data items', {
+        length: data.data.length,
+        firstItemKeys: data.data[0] ? Object.keys(data.data[0]) : 'empty'
+      })
     }
 
     const images: string[] = []
@@ -524,7 +522,7 @@ export default class AiProvider {
           }
         } else if (item.url) {
           // 部分代理只返回内部域名 URL，渲染器无法直接加载；尝试 fetch 转 base64，失败时回退到原 URL
-          logger.warn('[parseOpenAIImageResponse] b64_json missing, falling back to url:', item.url)
+          logger.warn('[parseOpenAIImageResponse] b64_json missing, falling back to url', { url: item.url })
           try {
             const dataUrl = await fetchImageAsDataUrl(item.url)
             images.push(dataUrl)
@@ -538,7 +536,9 @@ export default class AiProvider {
         }
       }
     } else {
-      logger.warn('[parseOpenAIImageResponse] Unexpected response structure:', JSON.stringify(data).slice(0, 500))
+      logger.warn('[parseOpenAIImageResponse] Unexpected response structure', {
+        preview: JSON.stringify(data).slice(0, 500)
+      })
     }
 
     if (images.length === 0) {

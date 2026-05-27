@@ -362,12 +362,10 @@ const ImageGenerationArea: React.FC = () => {
           }
         } else if (data.data && Array.isArray(data.data)) {
           // 标准 OpenAI 格式：优先非空 b64_json（部分代理会同时返回不可用的 url）
-          logger.info(
-            '[ImageGeneration] data.data length:',
-            data.data.length,
-            'first item keys:',
-            data.data[0] ? Object.keys(data.data[0]) : 'empty'
-          )
+          logger.info('[ImageGeneration] data.data items', {
+            length: data.data.length,
+            firstItemKeys: data.data[0] ? Object.keys(data.data[0]) : 'empty'
+          })
           for (const item of data.data) {
             const b64 = item.b64_json || item.b64Json || item.b64
             if (b64) {
@@ -376,7 +374,7 @@ const ImageGenerationArea: React.FC = () => {
             } else if (item.url) {
               // 部分代理只返回内部域名 URL（如 http://chatgpt2api/...），渲染器无法直接加载
               // 尝试 fetch 转 base64；失败时回退到原 URL，让用户从控制台看到错误
-              logger.warn('[ImageGeneration] b64_json missing, falling back to url:', item.url)
+              logger.warn('[ImageGeneration] b64_json missing, falling back to url', { url: item.url })
               try {
                 const dataUrl = await fetchImageAsDataUrl(item.url, abortController.signal)
                 generatedImageUrls.push(dataUrl)
@@ -387,7 +385,9 @@ const ImageGenerationArea: React.FC = () => {
             }
           }
         } else {
-          logger.warn('[ImageGeneration] Unexpected response structure:', JSON.stringify(data).slice(0, 500))
+          logger.warn('[ImageGeneration] Unexpected response structure', {
+            preview: JSON.stringify(data).slice(0, 500)
+          })
         }
       }
       if (generatedImageUrls.length === 0) {
