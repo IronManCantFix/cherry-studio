@@ -476,6 +476,16 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
       const urls: string[] = []
       const base64s: string[] = []
 
+      logger.info('[ImageGeneration] Response keys:', Object.keys(data))
+      if (data.data && Array.isArray(data.data)) {
+        logger.info(
+          '[ImageGeneration] data.data length:',
+          data.data.length,
+          'first item keys:',
+          data.data[0] ? Object.keys(data.data[0]) : 'empty'
+        )
+      }
+
       if (data.metadata?.output?.choices?.length) {
         // 万相/阿里云格式：每个 choice 包含一张图，遍历所有 choices
         for (const choice of data.metadata.output.choices) {
@@ -491,12 +501,16 @@ const NewApiPage: FC<{ Options: string[] }> = ({ Options }) => {
       } else if (data.data && Array.isArray(data.data)) {
         // 标准 OpenAI 格式：每个 item 内优先非空 b64_json，否则取 url，避免重复下载
         for (const item of data.data) {
-          if (item.b64_json) {
-            base64s.push(item.b64_json)
+          const b64 = item.b64_json || item.b64Json || item.b64
+          if (b64) {
+            base64s.push(b64)
           } else if (item.url) {
+            logger.warn('[ImageGeneration] b64_json missing, falling back to url:', item.url)
             urls.push(item.url)
           }
         }
+      } else {
+        logger.warn('[ImageGeneration] Unexpected response structure:', JSON.stringify(data).slice(0, 500))
       }
 
       if (urls.length > 0) {

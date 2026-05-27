@@ -490,8 +490,18 @@ export default class AiProvider {
     }
 
     const data = (await response.json()) as {
-      data?: Array<{ b64_json?: string; url?: string }>
+      data?: Array<{ b64_json?: string; b64Json?: string; b64?: string; url?: string }>
       metadata?: { output?: { choices?: Array<{ message?: { content?: Array<{ image?: string }> } }> } }
+    }
+
+    logger.info('[parseOpenAIImageResponse] Response keys:', Object.keys(data || {}))
+    if (Array.isArray(data?.data)) {
+      logger.info(
+        '[parseOpenAIImageResponse] data.data length:',
+        data.data.length,
+        'first item keys:',
+        data.data[0] ? Object.keys(data.data[0]) : 'empty'
+      )
     }
 
     const images: string[] = []
@@ -503,11 +513,18 @@ export default class AiProvider {
       }
     } else if (Array.isArray(data?.data)) {
       for (const item of data.data) {
-        if (item.b64_json) {
-          const mime = detectImageMimeFromBase64(item.b64_json)
-          images.push(`data:${mime};base64,${item.b64_json}`)
+        const b64 = item.b64_json || item.b64Json || item.b64
+        if (b64) {
+          // 检查是否已经是 data URL 格式
+          if (b64.startsWith('data:')) {
+            images.push(b64)
+          } else {
+            const mime = detectImageMimeFromBase64(b64)
+            images.push(`data:${mime};base64,${b64}`)
+          }
         } else if (item.url) {
           // 部分代理只返回内部域名 URL，渲染器无法直接加载；尝试 fetch 转 base64，失败时回退到原 URL
+          logger.warn('[parseOpenAIImageResponse] b64_json missing, falling back to url:', item.url)
           try {
             const dataUrl = await fetchImageAsDataUrl(item.url)
             images.push(dataUrl)
@@ -520,6 +537,8 @@ export default class AiProvider {
           }
         }
       }
+    } else {
+      logger.warn('[parseOpenAIImageResponse] Unexpected response structure:', JSON.stringify(data).slice(0, 500))
     }
 
     if (images.length === 0) {
