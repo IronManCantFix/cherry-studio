@@ -367,10 +367,34 @@ const ImageGenerationArea: React.FC = () => {
             firstItemKeys: data.data[0] ? Object.keys(data.data[0]) : 'empty'
           })
           for (const item of data.data) {
-            const b64 = item.b64_json || item.b64Json || item.b64
+            // 遍历所有可能的 base64 字段名（兼容不同代理的命名）
+            let b64: string | undefined
+            for (const key of ['b64_json', 'b64Json', 'b64', 'base64', 'base64_json']) {
+              const val = item[key]
+              if (val && typeof val === 'string' && val.length > 100) {
+                b64 = val
+                break
+              }
+            }
+            // 如果没有找到标准字段，搜索 item 中任何看起来像 base64 的长字符串值
+            if (!b64) {
+              for (const [key, val] of Object.entries(item)) {
+                if (key === 'url' || key === 'revised_prompt') continue
+                if (typeof val === 'string' && val.length > 100 && /^[A-Za-z0-9+/=]+$/.test(val.slice(0, 50))) {
+                  b64 = val
+                  logger.info('[ImageGeneration] Found base64-like data in non-standard field', { key })
+                  break
+                }
+              }
+            }
             if (b64) {
-              const mime = detectImageMimeFromBase64(b64)
-              generatedImageUrls.push(`data:${mime};base64,${b64}`)
+              // 如果 b64 已经是 data URL 格式，直接使用
+              if (b64.startsWith('data:')) {
+                generatedImageUrls.push(b64)
+              } else {
+                const mime = detectImageMimeFromBase64(b64)
+                generatedImageUrls.push(`data:${mime};base64,${b64}`)
+              }
             } else if (item.url) {
               // 部分代理只返回内部域名 URL（如 http://chatgpt2api/...），渲染器无法直接加载
               // 尝试 fetch 转 base64；失败时回退到原 URL，让用户从控制台看到错误
